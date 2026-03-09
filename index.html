@@ -1,574 +1,700 @@
+```html
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>集中学習ダッシュボード</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#f6f1e8;
-      --accent:#f2c94c;
-      --card-bg:#ffffff;
-      --muted:#7b7b7b;
-      --text:#3d3d3d;
-      --note-cream:#fff8ec;
-      --shadow: 0 10px 30px rgba(60,50,40,0.09);
-      --card-radius:20px;
-      --gold-1:#f9e38b;
-      --gold-2:#d4a22e;
-      --gold-3:#fff6d4;
-      --green-1:#bfe8a6;
-      --green-2:#7fbf4a;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter, "Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
-    /* page layout with generous outer padding for doodles */
-    .page{
-      min-height:100vh;
-      padding:48px 64px;
-      position:relative;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 0.72fr;
-      gap:28px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集中学習ダッシュボード</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    /* background doodles */
-    .doodles{
-      position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.18;
-      background-image:
-        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000"><g fill="none" stroke="%233d3d3d" stroke-width="1.3" opacity="0.12" stroke-linecap="round" stroke-linejoin="round"><path d="M60 120c40-20 90-10 130 6"/><path d="M1400 120c-40 10-90 20-130 6"/><path d="M120 780c50-30 120-30 180-12"/><path d="M1300 760c-30-20-80-10-120 6"/><rect x="40" y="40" width="120" height="80" rx="8"/><path d="M58 90 l90 0"/><path d="M1280 60 l48 0"/><path d="M200 220 l90 28"/><path d="M1100 520 l60 -22"/><path d="M300 600 l40 -10"/><path d="M350 610 l18 8"/></g><g fill="%23f2c94c" opacity="0.06"><circle cx="200" cy="140" r="60"/><rect x="1120" y="60" width="160" height="100" rx="12"/></g></svg>');
-      background-repeat:no-repeat;
-      background-position: left top;
-      background-size:cover;
-    }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f6f1e8 0%, #f8f5f0 50%, #fbf7f2 100%);
+            min-height: 100vh;
+            color: #3d3d3d;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 60px;
+        }
 
-    /* Card base */
-    .card{
-      background:var(--card-bg);
-      border-radius:var(--card-radius);
-      box-shadow:var(--shadow);
-      padding:20px;
-      position:relative;
-      z-index:1;
-      border:1px solid rgba(60,50,40,0.04);
-    }
+        /* 背景装飾 */
+        .bg-decoration {
+            position: fixed;
+            z-index: -1;
+            opacity: 0.06;
+            font-size: 0;
+        }
 
-    /* grid placement */
-    .notes{grid-column:1 / 2; grid-row:1 / 2; display:flex;flex-direction:column;}
-    .viewer{grid-column:2 / 3; grid-row:1 / 2; display:flex;flex-direction:column;}
-    .tasks{grid-column:1 / 2; grid-row:2 / 3; display:flex;flex-direction:column;}
-    .timer{grid-column:2 / 3; grid-row:2 / 3; display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;}
+        .book { top: 10%; left: 8%; font-size: 120px; }
+        .pencil { top: 65%; right: 10%; font-size: 100px; transform: rotate(-15deg); }
+        .notebook { bottom: 15%; left: 12%; font-size: 90px; }
+        .star { top: 30%; right: 15%; font-size: 60px; }
+        .pen { bottom: 25%; left: 5%; font-size: 80px; }
 
-    /* generous padding inside to leave space around content for doodles */
-    .notes .card, .viewer .card, .tasks .card, .timer .card{height:100%;}
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-areas: 
+                "notes viewer"
+                "tasks timer";
+            grid-template-columns: 1.3fr 1fr;
+            grid-template-rows: 1fr 1.2fr;
+            gap: 30px;
+            min-height: 90vh;
+        }
 
-    /* NOTES - vertical notebook style */
-    .notes .card{
-      padding:28px 24px 24px 64px;
-      background:linear-gradient(180deg,var(--note-cream) 0%, #fffdf7 100%);
-      overflow:hidden;
-    }
-    .notes .binding{
-      position:absolute;left:24px;top:28px;bottom:28px;width:36px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;
-    }
-    .notes .binding span{
-      width:18px;height:14px;border-radius:50%;
-      border:3px solid rgba(120,60,40,0.7);
-      border-right-color:transparent;background:transparent;
-    }
-    .notes .paper{
-      position:absolute;inset:26px 26px 26px 74px;border-radius:14px;padding:18px;
-      background:
-        repeating-linear-gradient(180deg, rgba(60,60,60,0.04) 0 28px, transparent 28px 30px),
-        var(--note-cream);
-      border-left:6px solid rgba(220,60,60,0.14);
-      box-shadow: 0 8px 20px rgba(40,30,20,0.06);
-    }
-    .notes h2{margin:0 0 8px 4px;font-size:18px;color:var(--muted);font-weight:700}
-    .notes textarea{
-      width:100%;height:calc(100% - 40px);border:0;background:transparent;resize:none;padding:8px 6px;font-size:15px;line-height:28px;color:var(--text);outline:none;
-      caret-color:var(--accent);
-    }
+        .card {
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 8px 25px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
 
-    /* VIEWER - gold ornate frame */
-    .viewer .card{
-      display:flex;flex-direction:column;padding:22px;border-radius:22px;
-      background:linear-gradient(180deg,#fffaf0 0%,#fff7e6 100%);
-    }
-    .frame{
-      flex:1;border-radius:14px;padding:14px;background:
-        linear-gradient(180deg,var(--gold-3), #fff2cc 30%, var(--gold-1));
-      border:6px solid;
-      border-image: linear-gradient(180deg, var(--gold-1), var(--gold-2)) 1;
-      box-shadow: 0 12px 30px rgba(110,80,20,0.12), inset 0 2px 0 rgba(255,255,255,0.6);
-      position:relative;overflow:hidden;display:flex;flex-direction:column;
-    }
-    .frame .ornament{
-      position:absolute;width:76px;height:76px;right:12px;top:12px;background:
-      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 40%),
-      linear-gradient(135deg, rgba(255,255,255,0.12), transparent 40%);
-      border-radius:12px;transform:rotate(12deg);box-shadow:inset 0 2px 8px rgba(0,0,0,0.06);
-      opacity:0.9;
-    }
-    .frame .ornament.left{left:12px;right:auto;top:12px;transform:rotate(-8deg)}
-    .frame .title{position:absolute;left:18px;top:14px;font-weight:800;color:#6b4d18;letter-spacing:0.02em}
-    .frame .inner{
-      margin-top:38px;border-radius:8px;background:#fff;flex:1;overflow:hidden;border:3px solid rgba(0,0,0,0.04);
-    }
-    .frame .controls{display:flex;gap:8px;margin-top:12px;align-items:center}
-    .frame input[type="url"]{flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(60,40,20,0.06);outline:none;font-size:14px}
-    .frame button{background:var(--accent);border:none;padding:9px 12px;border-radius:10px;color:#222;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(220,150,40,0.14)}
-    .frame iframe{width:100%;height:100%;border:0;background:#fff}
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.12), 0 12px 35px rgba(0,0,0,0.06);
+        }
 
-    /* TASKS - larger bottom-left */
-    .tasks .card{
-      padding:20px 18px;border-radius:18px;display:flex;flex-direction:column;gap:14px;
-    }
-    .tasks .top{display:flex;align-items:center;gap:12px}
-    .tasks h3{margin:0;font-size:18px;color:#5a4a3a}
-    .tasks .sections{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:160px}
-    .section{background:linear-gradient(180deg,#fff,#fffaf7);padding:12px;border-radius:12px;border:1px solid rgba(70,50,30,0.04);display:flex;flex-direction:column;gap:8px}
-    .section h4{margin:0;font-size:15px;color:var(--muted);font-weight:700}
-    /* Goals list (editable checkboxes) */
-    .goals-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
-    .goal-item{display:flex;align-items:center;gap:8px}
-    .goal-item input[type="checkbox"]{width:18px;height:18px}
-    .goal-item input[type="text"]{border:0;background:transparent;outline:none;font-size:14px;color:var(--text);min-width:0}
-    /* To-do input */
-    .todo-input{display:flex;gap:8px}
-    .todo-input input{flex:1;padding:8px;border-radius:10px;border:1px solid rgba(80,60,40,0.06);outline:none}
-    .todo-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
-    .todo-item{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,0.02)}
-    .todo-left{display:flex;align-items:center;gap:8px;min-width:0}
-    .todo-left input[type="checkbox"]{width:18px;height:18px}
-    .todo-left .text{font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .todo-actions button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:6px;border-radius:6px}
-    /* schedule */
-    .schedule-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
-    .sched-item{display:flex;gap:8px;align-items:center}
-    .sched-item input{border:0;background:transparent;outline:none;font-size:14px;color:var(--text)}
-    .small-muted{font-size:13px;color:var(--muted)}
+        /* ノートスペース */
+        .notes {
+            grid-area: notes;
+            background: linear-gradient(135deg, #fefcf8 0%, #fffaf4 100%);
+            padding: 35px;
+            border: 1px solid #f0e6d9;
+            position: relative;
+        }
 
-    /* TIMER - muscat motif and controls */
-    .timer .card{
-      width:320px;min-height:220px;padding:18px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-      background:linear-gradient(180deg,#f8fff6 0%, #f1f8ed 100%);
-    }
-    .cluster-wrap{position:relative;width:180px;height:160px;display:flex;align-items:center;justify-content:center;pointer-events:none}
-    .cluster{position:relative;width:160px;height:140px;display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;filter:drop-shadow(0 10px 22px rgba(40,60,30,0.12))}
-    .grape{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--green-1),var(--green-2));border:3px solid rgba(40,80,30,0.12);box-shadow: inset 0 -8px 16px rgba(0,0,0,0.08), 0 6px 14px rgba(40,80,30,0.08);position:relative}
-    .grape::after{content:"";position:absolute;left:8px;top:6px;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.88), rgba(255,255,255,0.5) 40%, transparent 60%);opacity:0.95}
-    .vine{position:absolute;top:-20px;left:54px;width:80px;height:48px}
-    .leaf{position:absolute;width:40px;height:26px;border-radius:14px;background:linear-gradient(180deg,#7fc85f,#3e7b2b);border:2px solid rgba(0,0,0,0.06)}
-    .leaf.l1{left:0;top:6px;transform:rotate(-26deg)}
-    .leaf.l2{left:26px;top:0;transform:rotate(6deg)}
-    .leaf.l3{left:52px;top:8px;transform:rotate(26deg)}
-    .time-display{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:rgba(18,28,20,0.9);color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:34px;box-shadow:0 10px 26px rgba(10,20,10,0.18);z-index:5}
-    .timer-controls{position:absolute;right:12px;bottom:12px;display:flex;gap:8px;flex-direction:column;align-items:center}
-    .controls-row{display:flex;gap:8px}
-    .btn{padding:8px 12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
-    .btn.start{background:var(--green-2);color:#fff}
-    .btn.break{background:#6da3e6;color:#fff}
-    .btn.reset{background:#e08b6b;color:#fff}
-    .btn.set{background:#f2c94c;color:#2b2b2b}
-    .small-note{font-size:13px;color:var(--muted);margin-top:8px}
+        .notes::before {
+            content: '';
+            position: absolute;
+            left: 35px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #e53e3e 0%, #fc8181 100%);
+            border-radius: 2px;
+        }
 
-    /* scrollbar small */
-    .goals-list::-webkit-scrollbar, .todo-list::-webkit-scrollbar, .schedule-list::-webkit-scrollbar{height:6px;width:6px}
-    .goals-list::-webkit-scrollbar-thumb, .todo-list::-webkit-scrollbar-thumb, .schedule-list::-webkit-scrollbar-thumb{background:rgba(60,60,60,0.08);border-radius:6px}
+        .notes-header {
+            color: #5a4a40;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding-left: 25px;
+            border-bottom: 2px solid #e6d4c5;
+            padding-bottom: 12px;
+        }
 
-    @media (max-width:1100px){
-      .page{padding:24px;grid-template-columns:1fr;grid-template-rows:auto auto auto auto;gap:18px}
-      .timer .card{width:100%}
-    }
+        .notes-content {
+            height: 380px;
+            position: relative;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 54px,
+                #f0e6d9 55px,
+                #f0e6d9 56px
+            );
+            border-radius: 16px;
+            padding: 25px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 2.2;
+            overflow-y: auto;
+            border: 1px solid #f0e6d9;
+        }
 
-  </style>
+        .notes-content:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 2px #f2c94c;
+        }
+
+        .notes-content::placeholder {
+            color: #a69f92;
+            font-style: italic;
+        }
+
+        /* 教材閲覧スペース */
+        .viewer {
+            grid-area: viewer;
+            min-height: 480px;
+        }
+
+        .gold-frame {
+            position: relative;
+            height: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .gold-frame::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: conic-gradient(from 0deg, #f2c94c, #f4b400, #f2c94c, #f4b400);
+            border-radius: 24px;
+            padding: 12px;
+            z-index: 1;
+        }
+
+        .gold-frame::after {
+            content: '';
+            position: absolute;
+            inset: 12px;
+            background: linear-gradient(135deg, #fffdf9 0%, #fefcf8 100%);
+            border-radius: 16px;
+            z-index: 2;
+        }
+
+        .viewer-content {
+            position: relative;
+            z-index: 3;
+            height: 100%;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-header {
+            color: #b8860b;
+            font-size: 20px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #f0e6d9;
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255,255,255,0.9);
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #f2c94c;
+            box-shadow: 0 0 0 4px rgba(242,201,76,0.15);
+        }
+
+        .load-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f2c94c, #f4b400);
+            color: #3d3d3d;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(242,201,76,0.3);
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(242,201,76,0.4);
+        }
+
+        .viewer-iframe {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f5f2 0%, #fbf9f6 100%);
+        }
+
+        /* タスクスペース */
+        .tasks {
+            grid-area: tasks;
+            background: linear-gradient(135deg, #fffdf9 0%, #faf8f5 100%);
+            padding: 30px;
+            border: 1px solid #f0e6d9;
+        }
+
+        .tasks-header {
+            color: #5a4a40;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .task-section {
+            margin-bottom: 28px;
+            padding: 20px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 16px;
+            border: 1px solid #f0e6d9;
+        }
+
+        .task-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #3d3d3d;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #f2c94c;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #a69f92;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ffeaa7;
+            color: #3d3d3d;
+        }
+
+        .add-task-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .add-task-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #f0e6d9;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .add-btn {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #f2c94c, #f4b400);
+            color: #3d3d3d;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .schedule-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            border: 1px solid #f0e6d9;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            background: rgba(255,255,255,0.8);
+        }
+
+        /* ポモドーロタイマー */
+        .timer {
+            grid-area: timer;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e8 100%);
+            padding: 25px;
+            text-align: center;
+            height: fit-content;
+            margin-top: auto;
+            border: 1px solid #d1e8d4;
+        }
+
+        .timer-header {
+            color: #2d5f3f;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .grape-cluster {
+            position: relative;
+            width: 240px;
+            height: 260px;
+            margin: 0 auto 25px;
+        }
+
+        .grape {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 40%, #86de54 0%, #66bb6a 45%, #4caf50 100%);
+            box-shadow: 
+                0 6px 16px rgba(102,187,106,0.4),
+                inset 0 -3px 6px rgba(0,0,0,0.2),
+                inset 0 2px 4px rgba(255,255,255,0.3);
+        }
+
+        .grape:nth-child(1) { width: 40px; height: 40px; top: 15px; left: 95px; }
+        .grape:nth-child(2) { width: 45px; height: 45px; top: 30px; left: 65px; }
+        .grape:nth-child(3) { width: 48px; height: 48px; top: 35px; left: 130px; }
+        .grape:nth-child(4) { width: 44px; height: 44px; top: 65px; left: 45px; }
+        .grape:nth-child(5) { width: 52px; height: 52px; top: 72px; left: 105px; }
+        .grape:nth-child(6) { width: 46px; height: 46px; top: 70px; left: 165px; }
+        .grape:nth-child(7) { width: 42px; height: 42px; top: 110px; left: 75px; }
+        .grape:nth-child(8) { width: 48px; height: 48px; top: 112px; left: 140px; }
+        .grape:nth-child(9) { width: 40px; height: 40px; top: 150px; left: 105px; }
+        .grape:nth-child(10) { width: 38px; height: 38px; top: 185px; left: 105px; }
+
+        .timer-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
+            font-weight: 800;
+            color: #2e7d32;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            z-index: 10;
+            min-width: 160px;
+        }
+
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .timer-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-start { background: linear-gradient(135deg, #52c41a, #389e0d); color: white; }
+        .btn-break { background: linear-gradient(135deg, #fa8c16, #d46b0f); color: white; }
+        .btn-reset { background: linear-gradient(135deg, #f2c94c, #f4b400); color: #3d3d3d; }
+        .btn-set { background: linear-gradient(135deg, #1890ff, #096dd9); color: white; }
+
+        .timer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 1400px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "notes"
+                    "viewer"
+                    "tasks"
+                    "timer";
+                gap: 25px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="doodles" aria-hidden="true"></div>
-  <div class="page" role="main">
-    <div class="notes">
-      <div class="card">
-        <div class="binding" aria-hidden="true">
-          <span></span><span></span><span></span><span></span><span></span>
+    <!-- 背景装飾 -->
+    <div class="bg-decoration book">📚</div>
+    <div class="bg-decoration pencil">✏️</div>
+    <div class="bg-decoration notebook">📓</div>
+    <div class="bg-decoration star">⭐</div>
+    <div class="bg-decoration pen">🖊️</div>
+
+    <div class="container">
+        <!-- ノートスペース -->
+        <div class="card notes">
+            <div class="notes-header">📝 Notes</div>
+            <div class="notes-content" 
+                 contenteditable="true" 
+                 placeholder="ここに学習メモや考えを書き込んでください...&#10;&#10;• 重要なポイント&#10;• 気づいたこと&#10;• 次にやるべきこと"
+                 spellcheck="false"></div>
         </div>
-        <div class="paper">
-          <h2>Notes</h2>
-          <textarea id="notesArea" placeholder="ここにノートを書いてください（ローカルに保存されます）"></textarea>
+
+        <!-- 教材閲覧スペース -->
+        <div class="card viewer">
+            <div class="gold-frame">
+                <div class="viewer-content">
+                    <div class="viewer-header">📚 Learning Viewer</div>
+                    <div class="url-input-group">
+                        <input type="url" class="url-input" id="urlInput" placeholder="YouTubeや教材のURLを入力...">
+                        <button class="load-btn" onclick="loadViewer()">開く</button>
+                    </div>
+                    <iframe class="viewer-iframe" id="viewerFrame" src="about:blank"></iframe>
+                </div>
+            </div>
         </div>
-      </div>
+
+        <!-- タスクスペース -->
+        <div class="card tasks">
+            <div class="tasks-header">📋 Tasks</div>
+            
+            <!-- 今日の目標 -->
+            <div class="task-section" id="goals-section">
+                <div class="section-title">🎯 今日の目標</div>
+                <div id="goals-list">
+                    <div class="task-item" data-task="宿題を終わらせる">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">宿題を終わらせる</span>
+                    </div>
+                    <div class="task-item" data-task="ノートを復習する">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">ノートを復習する</span>
+                    </div>
+                    <div class="task-item" data-task="重要単語を覚える">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">重要単語を覚える</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- To-Doリスト -->
+            <div class="task-section">
+                <div class="section-title">📝 To-Doリスト</div>
+                <div id="todo-list"></div>
+                <div class="add-task-input">
+                    <input type="text" id="new-task-input" placeholder="新しいタスクを追加...">
+                    <button class="add-btn" onclick="addTodo()">追加</button>
+                </div>
+            </div>
+
+            <!-- スケジュール -->
+            <div class="task-section">
+                <div class="section-title">⏰ スケジュール</div>
+                <textarea class="schedule-textarea" 
+                          placeholder="09:00-10:00 数学演習&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩&#10;10:30-11:30 英語単語暗記&#10;&#10;予定を記入してください..."></textarea>
+            </div>
+        </div>
+
+        <!-- ポモドーロタイマー -->
+        <div class="card timer">
+            <div class="timer-header">⏱️ Timer</div>
+            <div class="grape-cluster">
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
+                <div class="grape"></div>
+                <div class="timer-display" id="timer-display">25:00</div>
+            </div>
+            <div class="timer-controls">
+                <button class="timer-btn btn-start" onclick="startTimer(25)">Start</button>
+                <button class="timer-btn btn-break" onclick="startBreak(5)">Break</button>
+                <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
+                <button class="timer-btn btn-set" onclick="setCustomTime()">Set</button>
+            </div>
+        </div>
     </div>
 
-    <div class="viewer">
-      <div class="card">
-        <div class="frame">
-          <div class="ornament left" aria-hidden="true"></div>
-          <div class="ornament" aria-hidden="true"></div>
-          <div class="title">Learning Viewer</div>
-          <div class="controls" style="z-index:2">
-            <input id="viewerUrl" type="url" placeholder="https://example.com" aria-label="教材URL" />
-            <button id="openBtn" type="button">開く</button>
-          </div>
-          <div class="inner" style="margin-top:8px;">
-            <iframe id="viewerFrame" src="about:blank" title="教材表示"></iframe>
-          </div>
-        </div>
-      </div>
-    </div>
+    <script>
+        let timerInterval = null;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
 
-    <div class="tasks">
-      <div class="card">
-        <div class="top">
-          <h3>Tasks</h3>
-          <div style="flex:1"></div>
-          <div class="small-muted">自動保存</div>
-        </div>
+        // localStorage 初期化
+        function initStorage() {
+            if (!localStorage.getItem('todos')) {
+                localStorage.setItem('todos', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('goals')) {
+                localStorage.setItem('goals', JSON.stringify([                    { text: '宿題を終わらせる', completed: false },
+                    { text: 'ノートを復習する', completed: false },
+                    { text: '重要単語を覚える', completed: false }
+                ]));
+            }
+            loadTodos();
+            loadGoals();
+        }
 
-        <div class="sections" style="margin-top:6px;">
-          <div class="section">
-            <h4>Goals</h4>
-            <div class="goals-list" id="goalsList">
-              <div class="goal-item"><input type="checkbox" data-key="g0"><input type="text" data-key="t0" value="宿題を終わらせる"></div>
-              <div class="goal-item"><input type="checkbox" data-key="g1"><input type="text" data-key="t1" value="ノート復習"></div>
-              <div class="goal-item"><input type="checkbox" data-key="g2"><input type="text" data-key="t2" value="英単語暗記"></div>
-            </div>
-          </div>
+        // 目標ロード・保存
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+            const container = document.getElementById('goals-list');
+            container.innerHTML = '';
+            goals.forEach((goal, index) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${goal.completed ? 'completed' : ''}`;
+                item.dataset.index = index;
+                item.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})">
+                    <span class="task-text">${goal.text}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
 
-          <div class="section">
-            <h4>To-Do</h4>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div class="todo-input">
-                <input id="todoInput" placeholder="新しいタスクを追加..." />
-                <button id="addTodo" class="btn set">追加</button>
-              </div>
-              <div class="todo-list" id="todoList"></div>
-            </div>
-          </div>
+        function toggleGoal(index) {
+            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+            goals[index].completed = !goals[index].completed;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            loadGoals();
+        }
 
-          <div class="section">
-            <h4>Schedule</h4>
-            <div class="schedule-list" id="scheduleList">
-              <div class="sched-item"><input class="sched-time" placeholder="09:00" value="10:00" /><input class="sched-text" placeholder="内容" value="英語学習"></div>
-              <div class="sched-item"><input class="sched-time" placeholder="11:00" value="11:30" /><input class="sched-text" placeholder="内容" value="休憩"></div>
-            </div>
-            <div style="margin-top:8px;display:flex;gap:8px">
-              <button id="addSched" class="btn set">行追加</button>
-              <button id="saveAll" class="btn" style="background:#e0e0e0;color:#333">保存</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+        // ToDoリスト
+        function loadTodos() {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            const container = document.getElementById('todo-list');
+            container.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${todo.completed ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})">
+                    <span class="task-text">${todo.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${index})">🗑️</button>
+                `;
+                container.appendChild(item);
+            });
+        }
 
-    <div class="timer">
-      <div class="card" role="region" aria-label="ポモドーロタイマー">
-        <div class="cluster-wrap" aria-hidden="false">
-          <div class="cluster" id="muscatCluster" aria-hidden="true">
-            <div class="grape" style="transform:translate(6px,-6px) scale(1.05)"></div>
-            <div class="grape" style="transform:translate(34px,-6px) scale(1.02)"></div>
-            <div class="grape" style="transform:translate(66px,0px) scale(0.98)"></div>
-            <div class="grape" style="transform:translate(12px,22px) scale(1.1)"></div>
-            <div class="grape" style="transform:translate(46px,22px) scale(0.96)"></div>
-            <div class="grape" style="transform:translate(78px,24px) scale(0.9)"></div>
-            <div class="grape" style="transform:translate(26px,44px) scale(0.88)"></div>
-            <div class="grape" style="transform:translate(58px,44px) scale(0.92)"></div>
-            <div class="vine" aria-hidden="true">
-              <div class="leaf l1"></div>
-              <div class="leaf l2"></div>
-              <div class="leaf l3"></div>
-            </div>
-          </div>
-          <div class="time-display" id="timeDisplay">25:00</div>
-          <div class="timer-controls">
-            <div class="controls-row">
-              <button id="startBtn" class="btn start">Start</button>
-              <button id="breakBtn" class="btn break">Break</button>
-            </div>
-            <div class="controls-row">
-              <button id="resetBtn" class="btn reset">Reset</button>
-              <button id="setBtn" class="btn set">Set</button>
-            </div>
-          </div>
-        </div>
-        <div class="small-note">マスカットモチーフのタイマー</div>
-      </div>
-    </div>
-  </div>
+        function addTodo() {
+            const input = document.getElementById('new-task-input');
+            const text = input.value.trim();
+            if (text) {
+                const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+                todos.push({ text, completed: false });
+                localStorage.setItem('todos', JSON.stringify(todos));
+                input.value = '';
+                loadTodos();
+            }
+        }
 
-  <script>
-    // Notes auto-save
-    const notesArea = document.getElementById('notesArea');
-    const NOTES_KEY = 'dash_notes_v1';
-    notesArea.value = localStorage.getItem(NOTES_KEY) || '';
-    notesArea.addEventListener('input', () => {
-      localStorage.setItem(NOTES_KEY, notesArea.value);
-    });
+        function toggleTodo(index) {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            todos[index].completed = !todos[index].completed;
+            localStorage.setItem('todos', JSON.stringify(todos));
+            loadTodos();
+        }
 
-    // Viewer iframe
-    const openBtn = document.getElementById('openBtn');
-    const viewerUrl = document.getElementById('viewerUrl');
-    const viewerFrame = document.getElementById('viewerFrame');
-    openBtn.addEventListener('click', () => {
-      let url = viewerUrl.value.trim();
-      if(!url) return;
-      if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      viewerFrame.src = url;
-    });
+        function deleteTodo(index) {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            todos.splice(index, 1);
+            localStorage.setItem('todos', JSON.stringify(todos));
+            loadTodos();
+        }
 
-    // TASKS - Goals
-    const goalsList = document.getElementById('goalsList');
-    const GOALS_KEY = 'dash_goals_v1';
-    function loadGoals(){
-      const raw = localStorage.getItem(GOALS_KEY);
-      if(!raw) return;
-      try{
-        const arr = JSON.parse(raw);
-        // clear existing
-        goalsList.innerHTML = '';
-        arr.forEach((g,i)=>{
-          const div = document.createElement('div');
-          div.className='goal-item';
-          const cb = document.createElement('input');
-          cb.type='checkbox';
-          cb.checked = !!g.checked;
-          cb.addEventListener('change', saveGoals);
-          const txt = document.createElement('input');
-          txt.type='text';
-          txt.value = g.text || '';
-          txt.addEventListener('input', saveGoals);
-          div.appendChild(cb);
-          div.appendChild(txt);
-          goalsList.appendChild(div);
-        });
-      }catch(e){}
-    }
-    function saveGoals(){
-      const items = Array.from(goalsList.querySelectorAll('.goal-item')).map(div=>{
-        const cb = div.querySelector('input[type="checkbox"]');
-        const txt = div.querySelector('input[type="text"]');
-        return {checked:!!cb.checked, text: txt.value};
-      });
-      localStorage.setItem(GOALS_KEY, JSON.stringify(items));
-    }
-    // initialize default if none
-    if(!localStorage.getItem(GOALS_KEY)){
-      const defaults = [
-        {checked:false, text:'宿題を終わらせる'},
-        {checked:false, text:'ノート復習'},
-        {checked:false, text:'英単語暗記'}
-      ];
-      localStorage.setItem(GOALS_KEY, JSON.stringify(defaults));
-    }
-    loadGoals();
+        // 教材ビューア
+        function loadViewer() {
+            const url = document.getElementById('urlInput').value;
+            if (url) {
+                const iframe = document.getElementById('viewerFrame');
+                iframe.src = url.includes('http') ? url : 'https://' + url;
+            }
+        }
 
-    // To-Do list
-    const todoInput = document.getElementById('todoInput');
-    const addTodo = document.getElementById('addTodo');
-    const todoList = document.getElementById('todoList');
-    const TODOS_KEY = 'dash_todos_v1';
+        // タイマー
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
 
-    function renderTodos(){
-      todoList.innerHTML='';
-      const raw = localStorage.getItem(TODOS_KEY);
-      let arr = [];
-      try{ arr = raw ? JSON.parse(raw) : []; }catch(e){arr=[];}
-      arr.forEach((t, idx)=>{
-        const item = document.createElement('div');
-        item.className='todo-item';
-        const left = document.createElement('div');
-        left.className='todo-left';
-        const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!t.done;
-        cb.addEventListener('change', ()=>{ t.done = cb.checked; saveTodos(); renderTodos(); });
-        const txt = document.createElement('div'); txt.className='text'; txt.textContent = t.text;
-        if(t.done) txt.style.textDecoration='line-through';
-        left.appendChild(cb); left.appendChild(txt);
-        const actions = document.createElement('div'); actions.className='todo-actions';
-        const del = document.createElement('button'); del.innerHTML='🗑'; del.title='削除';
-        del.addEventListener('click', ()=>{ arr.splice(idx,1); localStorage.setItem(TODOS_KEY, JSON.stringify(arr)); renderTodos(); });
-        actions.appendChild(del);
-        item.appendChild(left); item.appendChild(actions);
-        todoList.appendChild(item);
-      });
-    }
-    function saveTodos(){
-      const raw = localStorage.getItem(TODOS_KEY);
-      let arr = [];
-      try{ arr = raw ? JSON.parse(raw) : []; }catch(e){arr=[];}
-      // nothing to do here since editing via UI not inline except check toggles handled
-      localStorage.setItem(TODOS_KEY, JSON.stringify(arr));
-    }
-    addTodo.addEventListener('click', ()=>{
-      const txt = todoInput.value.trim();
-      if(!txt) return;
-      let arr = [];
-      try{ arr = localStorage.getItem(TODOS_KEY) ? JSON.parse(localStorage.getItem(TODOS_KEY)) : []; }catch(e){arr=[];}
-      arr.push({text:txt, done:false});
-      localStorage.setItem(TODOS_KEY, JSON.stringify(arr));
-      todoInput.value='';
-      renderTodos();
-    });
-    // allow Enter to add
-    todoInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ addTodo.click(); } });
+        function startTimer(minutes) {
+            if (isRunning) return;
+            timeLeft = minutes * 60;
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    alert('時間です！お疲れ様でした！');
+                    return;
+                }
+                timeLeft--;
+                updateDisplay();
+            }, 1000);
+            updateDisplay();
+        }
 
-    if(!localStorage.getItem(TODOS_KEY)){
-      localStorage.setItem(TODOS_KEY, JSON.stringify([
-        {text:'Quiz Review', done:false},
-        {text:'Read Article', done:false}
-      ]));
-    }
-    renderTodos();
+        function startBreak(minutes) {
+            startTimer(minutes);
+        }
 
-    // Schedule
-    const scheduleList = document.getElementById('scheduleList');
-    const addSched = document.getElementById('addSched');
-    const SCHED_KEY = 'dash_sched_v1';
-    function loadSched(){
-      const raw = localStorage.getItem(SCHED_KEY);
-      if(!raw) return;
-      try{
-        const arr = JSON.parse(raw);
-        scheduleList.innerHTML = '';
-        arr.forEach(it=>{
-          const div = document.createElement('div'); div.className='sched-item';
-          const t = document.createElement('input'); t.className='sched-time'; t.value = it.time || ''; t.placeholder='09:00';
-          const tx = document.createElement('input'); tx.className='sched-text'; tx.value = it.text || ''; tx.placeholder='内容';
-          div.appendChild(t); div.appendChild(tx);
-          scheduleList.appendChild(div);
-        });
-      }catch(e){}
-    }
-    function saveSched(){
-      const arr = Array.from(scheduleList.querySelectorAll('.sched-item')).map(div=>{
-        return {time:div.querySelector('.sched-time').value, text:div.querySelector('.sched-text').value};
-      });
-      localStorage.setItem(SCHED_KEY, JSON.stringify(arr));
-    }
-    addSched.addEventListener('click', ()=>{
-      const div = document.createElement('div'); div.className='sched-item';
-      const t = document.createElement('input'); t.className='sched-time'; t.placeholder='09:00';
-      const tx = document.createElement('input'); tx.className='sched-text'; tx.placeholder='内容';
-      div.appendChild(t); div.appendChild(tx);
-      scheduleList.appendChild(div);
-    });
-    document.getElementById('saveAll').addEventListener('click', ()=>{
-      saveGoals();
-      saveSched();
-      // also save todos state
-      const rawTodos = localStorage.getItem(TODOS_KEY);
-      if(rawTodos) localStorage.setItem(TODOS_KEY, rawTodos);
-      alert('保存しました');
-    });
-    if(!localStorage.getItem(SCHED_KEY)){
-      localStorage.setItem(SCHED_KEY, JSON.stringify([
-        {time:'10:00', text:'Study'},
-        {time:'11:00', text:'Break'}
-      ]));
-    }
-    loadSched();
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateDisplay();
+        }
 
-    // persist changes on blur for goals and schedule
-    goalsList.addEventListener('input', saveGoals);
-    scheduleList.addEventListener('input', saveSched);
+        function setCustomTime() {
+            const minutes = prompt('何分タイマーにしますか？（数字のみ）', '25');
+            if (minutes && !isNaN(minutes) && minutes > 0) {
+                resetTimer();
+                timeLeft = parseInt(minutes) * 60;
+                updateDisplay();
+            }
+        }
 
-    // TIMER logic
-    const timeDisplay = document.getElementById('timeDisplay');
-    const startBtn = document.getElementById('startBtn');
-    const breakBtn = document.getElementById('breakBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const setBtn = document.getElementById('setBtn');
-
-    let timerInterval = null;
-    const TIMER_KEY = 'dash_timer_v1';
-    // state: seconds remaining
-    const defaultSeconds = 25 * 60;
-    let state = {
-      seconds: defaultSeconds,
-      running: false
-    };
-    // load persisted seconds if any
-    try{
-      const raw = localStorage.getItem(TIMER_KEY);
-      if(raw){
-        const obj = JSON.parse(raw);
-        if(typeof obj.seconds === 'number') state.seconds = obj.seconds;
-        if(typeof obj.running === 'boolean') state.running = false; // never auto-run on load
-      }
-    }catch(e){}
-
-    function formatTime(s){
-      const mm = Math.floor(s/60);
-      const ss = s%60;
-      return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
-    }
-    function renderTime(){
-      timeDisplay.textContent = formatTime(state.seconds);
-    }
-    function saveTimer(){
-      localStorage.setItem(TIMER_KEY, JSON.stringify({seconds:state.seconds, running:false}));
-    }
-    function tick(){
-      if(state.seconds<=0){
-        clearInterval(timerInterval); timerInterval=null; state.running=false; saveTimer(); return;
-      }
-      state.seconds--;
-      renderTime();
-      saveTimer();
-    }
-
-    startBtn.addEventListener('click', ()=>{
-      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false; return; }
-      if(state.seconds<=0) state.seconds = defaultSeconds;
-      state.running=true;
-      renderTime();
-      timerInterval = setInterval(tick, 1000);
-    });
-    breakBtn.addEventListener('click', ()=>{
-      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
-      state.seconds = 5 * 60;
-      renderTime();
-      state.running=true;
-      timerInterval = setInterval(tick, 1000);
-      saveTimer();
-    });
-    resetBtn.addEventListener('click', ()=>{
-      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
-      state.seconds = defaultSeconds;
-      renderTime();
-      saveTimer();
-    });
-    setBtn.addEventListener('click', ()=>{
-      const inMin = prompt('分数を入力してください（例: 25）', '25');
-      if(inMin===null) return;
-      const n = parseInt(inMin,10);
-      if(Number.isNaN(n) || n<0){ alert('有効な数値を入力してください'); return; }
-      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
-      state.seconds = n*60;
-      renderTime();
-      saveTimer();
-    });
-
-    renderTime();
-
-    // Save current state before unload
-    window.addEventListener('beforeunload', ()=>{
-      saveGoals();
-      saveSched();
-      saveTimer();
-    });
-
-    // small enhancement: allow deleting empty schedule items on blur if both empty
-    scheduleList.addEventListener('focusout', (e)=>{
-      setTimeout(()=>{
-        Array.from(scheduleList.querySelectorAll('.sched-item')).forEach(div=>{
-          const t = div.querySelector('.sched-time').value.trim();
-          const tx = div.querySelector('.sched-text').value.trim();
-          if(!t && !tx) div.remove();
-        });
-        saveSched();
-      }, 200);
-    });
-  </script>
+        // 初期化
+        initStorage();
+        updateDisplay();
+    </script>
 </body>
 </html>
+```
+
+[`1`][`2`]
+
+[`1`]: https://www.geeksforgeeks.org/javascript/how-to-create-responsive-admin-dashboard-using-html-css-javascript/
+[`2`]: https://dev.to/plazarev/javascript-dashboard-templates-14-great-examples-to-keep-in-mind-jg4
+[`3`]: https://github.com/josephDev123/admin-dashboard-design-template
+[`4`]: https://www.youtube.com/watch?v=47rl77sLbCE
+[`5`]: https://webix.com/demos/
+[`6`]: https://www.creative-tim.com/blog/web-design/free-dashboard-templates/
+[`7`]: https://www.youtube.com/watch?v=oqoLA-H9y0s
+[`8`]: https://www.w3schools.com/w3css/w3css_templates.asp
