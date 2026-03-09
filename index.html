@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>集中作業環境</title>
+    <title>集中学習ダッシュボード</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,487 +13,675 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f6f1e8 0%, #f8f5f0 50%, #fbf7f2 100%);
             min-height: 100vh;
+            color: #3d3d3d;
             overflow-x: hidden;
             position: relative;
+            padding: 40px 60px;
         }
 
         /* 背景装飾 */
-        body::before {
-            content: '📚';
+        .bg-decoration {
             position: fixed;
-            top: 5%;
-            left: 2%;
-            font-size: 80px;
-            opacity: 0.08;
             z-index: -1;
+            opacity: 0.06;
+            font-size: 0;
         }
 
-        body::after {
-            content: '✏️';
-            position: fixed;
-            bottom: 15%;
-            right: 3%;
-            font-size: 60px;
-            opacity: 0.1;
-            z-index: -1;
-            transform: rotate(-45deg);
-        }
+        .book { top: 10%; left: 8%; font-size: 120px; }
+        .pencil { top: 65%; right: 10%; font-size: 100px; transform: rotate(-15deg); }
+        .notebook { bottom: 15%; left: 12%; font-size: 90px; }
+        .star { top: 30%; right: 15%; font-size: 60px; }
+        .pen { bottom: 25%; left: 5%; font-size: 80px; }
 
-        .workspace {
+        .container {
             max-width: 1600px;
-            margin: 30px auto;
-            padding: 30px;
+            margin: 0 auto;
             display: grid;
             grid-template-areas: 
-                "notebook textbook"
-                "plan pomodoro";
-            grid-template-columns: 1.2fr 1fr;
-            grid-template-rows: auto auto;
-            gap: 25px;
-            min-height: 100vh;
+                "notes viewer"
+                "tasks timer";
+            grid-template-columns: 1.3fr 1fr;
+            grid-template-rows: 1fr 1.2fr;
+            gap: 30px;
+            min-height: 90vh;
         }
 
-        /* ノートエリア - 縦長 */
-        .notebook {
-            grid-area: notebook;
-            background: linear-gradient(135deg, #fef9f3 0%, #fdfbf7 100%);
-            border-radius: 18px;
-            padding: 30px;
-            box-shadow: 0 15px 45px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+        .card {
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 8px 25px rgba(0,0,0,0.04);
             position: relative;
-            border: 1px solid #f0e6d8;
-            min-height: 550px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
-        .notebook::before {
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.12), 0 12px 35px rgba(0,0,0,0.06);
+        }
+
+        /* ノートスペース */
+        .notes {
+            grid-area: notes;
+            background: linear-gradient(135deg, #fefcf8 0%, #fffaf4 100%);
+            padding: 35px;
+            border: 1px solid #f0e6d9;
+            position: relative;
+        }
+
+        .notes::before {
             content: '';
             position: absolute;
-            left: 25px;
-            top: 30px;
-            bottom: 30px;
-            width: 3px;
-            background: linear-gradient(180deg, #d32f2f 0%, #ff6b6b 100%);
+            left: 35px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, #e53e3e 0%, #fc8181 100%);
             border-radius: 2px;
         }
 
-        .notebook h2 {
-            color: #5d4037;
-            font-size: 18px;
-            margin-bottom: 20px;
-            margin-left: 20px;
+        .notes-header {
+            color: #5a4a40;
+            font-size: 20px;
             font-weight: 700;
-            border-bottom: 2px solid #d7ccc8;
-            padding-bottom: 10px;
+            margin-bottom: 25px;
+            padding-left: 25px;
+            border-bottom: 2px solid #e6d4c5;
+            padding-bottom: 12px;
         }
 
-        .notebook textarea {
-            width: 100%;
-            height: 450px;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-            line-height: 2.2;
-            resize: none;
-            font-family: 'Georgia', serif;
-            color: #3e2723;
-            padding: 20px;
-            outline: none;
+        .notes-content {
+            height: 380px;
             position: relative;
-            background-image: repeating-linear-gradient(
-                180deg,
-                transparent 0px,
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
                 transparent 54px,
-                #e0d7d1 55px,
-                #e0d7d1 56px
+                #f0e6d9 55px,
+                #f0e6d9 56px
             );
-            background-position: 0 10px;
-            background-attachment: local;
+            border-radius: 16px;
+            padding: 25px;
+            font-family: 'Georgia', serif;
+            font-size: 16px;
+            line-height: 2.2;
+            overflow-y: auto;
+            border: 1px solid #f0e6d9;
         }
 
-        .notebook textarea::placeholder {
-            color: #a1887f;
+        .notes-content:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 2px #f2c94c;
+        }
+
+        .notes-content::placeholder {
+            color: #a69f92;
             font-style: italic;
         }
 
-        .notebook textarea:focus {
-            outline: none;
+        /* 教材閲覧スペース */
+        .viewer {
+            grid-area: viewer;
+            min-height: 480px;
         }
 
-        /* 教材スペース - 豪華な額縁 */
-        .textbook {
-            grid-area: textbook;
-            border-radius: 15px;
-            padding: 0;
+        .gold-frame {
             position: relative;
-            min-height: 550px;
+            height: 100%;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 
-                0 20px 50px rgba(212,175,55,0.3),
-                0 10px 30px rgba(0,0,0,0.15),
-                inset 0 1px 0 rgba(255,255,255,0.4),
-                inset 0 -1px 0 rgba(0,0,0,0.2);
         }
 
-        .textbook::before {
+        .gold-frame::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 25%, #ffd700 50%, #ffb300 75%, #ffd700 100%);
-            border-radius: 15px;
-            padding: 8px;
+            background: conic-gradient(from 0deg, #f2c94c, #f4b400, #f2c94c, #f4b400);
+            border-radius: 24px;
+            padding: 12px;
             z-index: 1;
         }
 
-        .textbook::after {
+        .gold-frame::after {
             content: '';
             position: absolute;
-            inset: 8px;
-            background: linear-gradient(135deg, #fffaf0 0%, #fff8f0 100%);
-            border-radius: 10px;
+            inset: 12px;
+            background: linear-gradient(135deg, #fffdf9 0%, #fefcf8 100%);
+            border-radius: 16px;
             z-index: 2;
         }
 
-        .textbook-content {
+        .viewer-content {
             position: relative;
             z-index: 3;
+            height: 100%;
+            padding: 25px;
             display: flex;
             flex-direction: column;
-            height: 100%;
-            padding: 20px;
         }
 
-        .textbook h2 {
+        .viewer-header {
             color: #b8860b;
-            font-size: 18px;
-            margin-bottom: 15px;
-            text-align: center;
+            font-size: 20px;
             font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .textbook-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #d4af37;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            background: rgba(255,255,255,0.9);
-            color: #333;
-        }
-
-        .textbook-input:focus {
-            outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 8px rgba(212,175,55,0.4);
-        }
-
-        .textbook iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 8px;
-            background: #f8f9fa;
-        }
-
-        /* ポモドーロタイマー - マスカット */
-        .pomodoro {
-            grid-area: pomodoro;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
-            text-align: center;
-            border: 1px solid #d1f2eb;
-            height: fit-content;
-            margin-left: auto;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .pomodoro h2 {
-            color: #2d5f3f;
-            font-size: 18px;
+        .url-input-group {
+            display: flex;
+            gap: 12px;
             margin-bottom: 20px;
-            font-weight: 700;
         }
 
-        .grape-container {
-            position: relative;
-            width: 200px;
-            height: 220px;
-            margin: 0 auto 20px;
+        .url-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #f0e6d9;
+            border-radius: 12px;
+            font-size: 15px;
+            background: rgba(255,255,255,0.9);
+            transition: all 0.3s ease;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #f2c94c;
+            box-shadow: 0 0 0 4px rgba(242,201,76,0.15);
+        }
+
+        .load-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #f2c94c, #f4b400);
+            color: #3d3d3d;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(242,201,76,0.3);
+        }
+
+        .load-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(242,201,76,0.4);
+        }
+
+        .viewer-iframe {
+            flex: 1;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f5f2 0%, #fbf9f6 100%);
+        }
+
+        /* タスクスペース */
+        .tasks {
+            grid-area: tasks;
+            background: linear-gradient(135deg, #fffdf9 0%, #faf8f5 100%);
+            padding: 30px;
+            border: 1px solid #f0e6d9;
+        }
+
+        .tasks-header {
+            color: #5a4a40;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .task-section {
+            margin-bottom: 28px;
+            padding: 20px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 16px;
+            border: 1px solid #f0e6d9;
+        }
+
+        .task-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #3d3d3d;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: #f2c94c;
+            cursor: pointer;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #a69f92;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            background: #ffeaa7;
+            color: #3d3d3d;
+        }
+
+        .add-task-input {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .add-task-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #f0e6d9;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .add-btn {
+            padding: 10px 18px;
+            background: linear-gradient(135deg, #f2c94c, #f4b400);
+            color: #3d3d3d;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .schedule-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 14px;
+            border: 1px solid #f0e6d9;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            resize: vertical;
+            background: rgba(255,255,255,0.8);
+        }
+
+        /* ポモドーロタイマー */
+        .timer {
+            grid-area: timer;
+            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e8 100%);
+            padding: 25px;
+            text-align: center;
+            height: fit-content;
+            margin-top: auto;
+            border: 1px solid #d1e8d4;
+        }
+
+        .timer-header {
+            color: #2d5f3f;
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .grape-cluster {
+            position: relative;
+            width: 240px;
+            height: 260px;
+            margin: 0 auto 25px;
         }
 
         .grape {
             position: absolute;
             border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #86de54 0%, #66bb6a 40%, #4fa559 100%);
+            background: radial-gradient(circle at 40% 40%, #86de54 0%, #66bb6a 45%, #4caf50 100%);
             box-shadow: 
-                inset -2px -2px 4px rgba(0,0,0,0.2),
-                0 8px 16px rgba(0,0,0,0.15),
-                inset 2px 2px 4px rgba(255,255,255,0.3);
+                0 6px 16px rgba(102,187,106,0.4),
+                inset 0 -3px 6px rgba(0,0,0,0.2),
+                inset 0 2px 4px rgba(255,255,255,0.3);
         }
 
-        .grape:nth-child(1) { width: 35px; height: 35px; top: 10px; left: 80px; }
-        .grape:nth-child(2) { width: 38px; height: 38px; top: 25px; left: 50px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(3) { width: 40px; height: 40px; top: 25px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(4) { width: 38px; height: 38px; top: 55px; left: 30px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(5) { width: 42px; height: 42px; top: 60px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 12px 22px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(6) { width: 38px; height: 38px; top: 60px; left: 140px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(7) { width: 36px; height: 36px; top: 95px; left: 55px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 9px 16px rgba(0,0,0,0.16), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(8) { width: 40px; height: 40px; top: 95px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(9) { width: 34px; height: 34px; top: 130px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 8px 14px rgba(0,0,0,0.14), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(10) { width: 32px; height: 32px; top: 165px; left: 85px; }
+        .grape:nth-child(1) { width: 40px; height: 40px; top: 15px; left: 95px; }
+        .grape:nth-child(2) { width: 45px; height: 45px; top: 30px; left: 65px; }
+        .grape:nth-child(3) { width: 48px; height: 48px; top: 35px; left: 130px; }
+        .grape:nth-child(4) { width: 44px; height: 44px; top: 65px; left: 45px; }
+        .grape:nth-child(5) { width: 52px; height: 52px; top: 72px; left: 105px; }
+        .grape:nth-child(6) { width: 46px; height: 46px; top: 70px; left: 165px; }
+        .grape:nth-child(7) { width: 42px; height: 42px; top: 110px; left: 75px; }
+        .grape:nth-child(8) { width: 48px; height: 48px; top: 112px; left: 140px; }
+        .grape:nth-child(9) { width: 40px; height: 40px; top: 150px; left: 105px; }
+        .grape:nth-child(10) { width: 38px; height: 38px; top: 185px; left: 105px; }
 
-        .time-display {
+        .timer-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 42px;
+            font-size: 50px;
             font-weight: 800;
-            color: #1b5e20;
+            color: #2e7d32;
             font-family: 'Courier New', monospace;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-shadow: 0 3px 8px rgba(0,0,0,0.15);
             z-index: 10;
+            min-width: 160px;
         }
 
-        .pomodoro-controls {
-            display: flex;
+        .timer-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            justify-content: center;
-            margin-top: 20px;
         }
 
-        .btn {
-            padding: 11px 22px;
+        .timer-btn {
+            padding: 14px 20px;
             border: none;
-            border-radius: 25px;
+            border-radius: 16px;
             font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
         }
 
-        .btn-start {
-            background: linear-gradient(135deg, #52c41a, #389e0d);
-            color: white;
+        .btn-start { background: linear-gradient(135deg, #52c41a, #389e0d); color: white; }
+        .btn-break { background: linear-gradient(135deg, #fa8c16, #d46b0f); color: white; }
+        .btn-reset { background: linear-gradient(135deg, #f2c94c, #f4b400); color: #3d3d3d; }
+        .btn-set { background: linear-gradient(135deg, #1890ff, #096dd9); color: white; }
+
+        .timer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
         }
 
-        .btn-start:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(82,196,26,0.35);
-        }
-
-        .btn-reset {
-            background: linear-gradient(135deg, #fa8c16, #d48806);
-            color: white;
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(250,140,22,0.35);
-        }
-
-        /* 作業計画 */
-        .plan {
-            grid-area: plan;
-            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            border: 1px solid #e8e8e8;
-            margin-right: auto;
-            width: 80%;
-            margin-left: 0;
-        }
-
-        .plan-section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            border-left: 4px solid #4299e1;
-            transition: all 0.3s ease;
-        }
-
-        .plan-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(66,153,225,0.15);
-        }
-
-        .plan-section h3 {
-            color: #2d3748;
-            font-size: 16px;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        .plan-section textarea {
-            width: 100%;
-            height: 120px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            resize: none;
-            font-family: inherit;
-            background: #f7fafc;
-        }
-
-        .plan-section textarea:focus {
-            outline: none;
-            border-color: #4299e1;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(66,153,225,0.1);
-        }
-
-        /* ドラッグハンドル */
-        .drag-handle {
-            position: absolute;
-            top: 12px;
-            right: 15px;
-            width: 26px;
-            height: 26px;
-            background: rgba(0,0,0,0.08);
-            border-radius: 50%;
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            user-select: none;
-            transition: background 0.3s ease;
-        }
-
-        .drag-handle:hover {
-            background: rgba(0,0,0,0.12);
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .drag-handle::before {
-            content: '⋮';
-            font-weight: bold;
-            color: #666;
-        }
-
-        /* レスポンシブ対応 */
         @media (max-width: 1400px) {
-            .workspace {
+            .container {
                 grid-template-columns: 1fr;
                 grid-template-areas: 
-                    "notebook"
-                    "textbook"
-                    "plan"
-                    "pomodoro";
-            }
-
-            .pomodoro {
-                max-width: 100%;
-                width: 100%;
-            }
-
-            .plan {
-                width: 100%;
-                margin-left: 0;
+                    "notes"
+                    "viewer"
+                    "tasks"
+                    "timer";
+                gap: 25px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="workspace" id="workspace">
-        <!-- ノートエリア -->
-        <div class="notebook" draggable="true">
-            <div class="drag-handle"></div>
-            <h2>📝 ノート</h2>
-            <textarea placeholder="ここにメモを記入...&#10;・重要なポイント&#10;・気づき&#10;・次のアクション"></textarea>
+    <!-- 背景装飾 -->
+    <div class="bg-decoration book">📚</div>
+    <div class="bg-decoration pencil">✏️</div>
+    <div class="bg-decoration notebook">📓</div>
+    <div class="bg-decoration star">⭐</div>
+    <div class="bg-decoration pen">🖊️</div>
+
+    <div class="container">
+        <!-- ノートスペース -->
+        <div class="card notes">
+            <div class="notes-header">📝 Notes</div>
+            <div class="notes-content" 
+                 contenteditable="true" 
+                 placeholder="ここに学習メモや考えを書き込んでください...&#10;&#10;• 重要なポイント&#10;• 気づいたこと&#10;• 次にやるべきこと"
+                 spellcheck="false"></div>
         </div>
 
-        <!-- 教材スペース -->
-        <div class="textbook" draggable="true">
-            <div class="textbook-content">
-                <h2>📚 教材スペース</h2>
-                <input type="url" class="textbook-input" placeholder="教材URLを入力 (例: YouTube, PDFなど)" value="https://www.youtube.com/embed/dQw4w9WgXcQ">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+        <!-- 教材閲覧スペース -->
+        <div class="card viewer">
+            <div class="gold-frame">
+                <div class="viewer-content">
+                    <div class="viewer-header">📚 Learning Viewer</div>
+                    <div class="url-input-group">
+                        <input type="url" class="url-input" id="urlInput" placeholder="YouTubeや教材のURLを入力...">
+                        <button class="load-btn" onclick="loadViewer()">開く</button>
+                    </div>
+                    <iframe class="viewer-iframe" id="viewerFrame" src="about:blank"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <!-- タスクスペース -->
+        <div class="card tasks">
+            <div class="tasks-header">📋 Tasks</div>
+            
+            <!-- 今日の目標 -->
+            <div class="task-section" id="goals-section">
+                <div class="section-title">🎯 今日の目標</div>
+                <div id="goals-list">
+                    <div class="task-item" data-task="宿題を終わらせる">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">宿題を終わらせる</span>
+                    </div>
+                    <div class="task-item" data-task="ノートを復習する">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">ノートを復習する</span>
+                    </div>
+                    <div class="task-item" data-task="重要単語を覚える">
+                        <input type="checkbox" class="task-checkbox">
+                        <span class="task-text">重要単語を覚える</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- To-Doリスト -->
+            <div class="task-section">
+                <div class="section-title">📝 To-Doリスト</div>
+                <div id="todo-list"></div>
+                <div class="add-task-input">
+                    <input type="text" id="new-task-input" placeholder="新しいタスクを追加...">
+                    <button class="add-btn" onclick="addTodo()">追加</button>
+                </div>
+            </div>
+
+            <!-- スケジュール -->
+            <div class="task-section">
+                <div class="section-title">⏰ スケジュール</div>
+                <textarea class="schedule-textarea" 
+                          placeholder="09:00-10:00 数学演習&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩&#10;10:30-11:30 英語単語暗記&#10;&#10;予定を記入してください..."></textarea>
             </div>
         </div>
 
         <!-- ポモドーロタイマー -->
-        <div class="pomodoro" draggable="true">
-            <h2>⏱️ ポモドーロ</h2>
-            <div class="grape-container">
+        <div class="card timer">
+            <div class="timer-header">⏱️ Timer</div>
+            <div class="grape-cluster">
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
+                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
                 <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="time-display" id="timer">25:00</div>
+                <div class="timer-display" id="timer-display">25:00</div>
             </div>
-            <div class="pomodoro-controls">
-                <button class="btn btn-start" id="startBtn">▶️ Start</button>
-                <button class="btn btn-reset" id="resetBtn">🔄 Reset</button>
-            </div>
-        </div>
-
-        <!-- 作業計画 -->
-        <div class="plan" draggable="true">
-            <div class="plan-section">
-                <h3>🎯 今日の目標</h3>
-                <textarea placeholder="今日の3つの最重要タスク&#10;&#10;1. &#10;2. &#10;3. "></textarea>
-            </div>
-            <div class="plan-section">
-                <h3>📋 目次</h3>
-                <textarea placeholder="学習内容のチェックリスト&#10;&#10;□ 導入&#10;□ 基本概念&#10;□ 演習"></textarea>
-            </div>
-            <div class="plan-section">
-                <h3>⏰ 時間割</h3>
-                <textarea placeholder="今日のスケジュール&#10;09:00-10:00 学習1&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩"></textarea>
+            <div class="timer-controls">
+                <button class="timer-btn btn-start" onclick="startTimer(25)">Start</button>
+                <button class="timer-btn btn-break" onclick="startBreak(5)">Break</button>
+                <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
+                <button class="timer-btn btn-set" onclick="setCustomTime()">Set</button>
             </div>
         </div>
     </div>
 
     <script>
-        const draggables = document.querySelectorAll('[draggable="true"]');
-        
-        draggables.forEach(draggable => {
-            draggable.addEventListener('dragstart', (e) => {
-                e.dataTransfer.effectAllowed = 'move';
-                draggable.style.opacity = '0.5';
-            });
-            
-            draggable.addEventListener('dragend', (e) => {
-                draggable.style.opacity = '1';
-            });
-        });
+        let timerInterval = null;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
 
-        const workspace = document.getElementById('workspace');
-        workspace.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        });
+        // localStorage 初期化
+        function initStorage() {
+            if (!localStorage.getItem('todos')) {
+                localStorage.setItem('todos', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('goals')) {
+                localStorage.setItem('goals', JSON.stringify([                    { text: '宿題を終わらせる', completed: false },
+                    { text: 'ノートを復習する', completed: false },
+                    { text: '重要単語を覚える', completed: false }
+                ]));
+            }
+            loadTodos();
+            loadGoals();
+        }
 
-        workspace.addEventListener('drop', (e) => {
-            e.preventDefault();
-        });
+        // 目標ロード・保存
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+            const container = document.getElementById('goals-list');
+            container.innerHTML = '';
+            goals.forEach((goal, index) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${goal.completed ? 'completed' : ''}`;
+                item.dataset.index = index;
+                item.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})">
+                    <span class="task-text">${goal.text}</span>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleGoal(index) {
+            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+            goals[index].completed = !goals[index].completed;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            loadGoals();
+        }
+
+        // ToDoリスト
+        function loadTodos() {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            const container = document.getElementById('todo-list');
+            container.innerHTML = '';
+            todos.forEach((todo, index) => {
+                const item = document.createElement('div');
+                item.className = `task-item ${todo.completed ? 'completed' : ''}`;
+                item.innerHTML = `
+                    <input type="checkbox" class="task-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})">
+                    <span class="task-text">${todo.text}</span>
+                    <button class="delete-btn" onclick="deleteTodo(${index})">🗑️</button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function addTodo() {
+            const input = document.getElementById('new-task-input');
+            const text = input.value.trim();
+            if (text) {
+                const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+                todos.push({ text, completed: false });
+                localStorage.setItem('todos', JSON.stringify(todos));
+                input.value = '';
+                loadTodos();
+            }
+        }
+
+        function toggleTodo(index) {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            todos[index].completed = !todos[index].completed;
+            localStorage.setItem('todos', JSON.stringify(todos));
+            loadTodos();
+        }
+
+        function deleteTodo(index) {
+            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
+            todos.splice(index, 1);
+            localStorage.setItem('todos', JSON.stringify(todos));
+            loadTodos();
+        }
+
+        // 教材ビューア
+        function loadViewer() {
+            const url = document.getElementById('urlInput').value;
+            if (url) {
+                const iframe = document.getElementById('viewerFrame');
+                iframe.src = url.includes('http') ? url : 'https://' + url;
+            }
+        }
+
+        // タイマー
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startTimer(minutes) {
+            if (isRunning) return;
+            timeLeft = minutes * 60;
+            isRunning = true;
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    alert('時間です！お疲れ様でした！');
+                    return;
+                }
+                timeLeft--;
+                updateDisplay();
+            }, 1000);
+            updateDisplay();
+        }
+
+        function startBreak(minutes) {
+            startTimer(minutes);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateDisplay();
+        }
+
+        function setCustomTime() {
+            const minutes = prompt('何分タイマーにしますか？（数字のみ）', '25');
+            if (minutes && !isNaN(minutes) && minutes > 0) {
+                resetTimer();
+                timeLeft = parseInt(minutes) * 60;
+                updateDisplay();
+            }
+        }
+
+        // 初期化
+        initStorage();
+        updateDisplay();
     </script>
 </body>
 </html>
