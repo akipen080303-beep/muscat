@@ -1,321 +1,648 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>集中作業環境プロトタイプ - Muscat Edition</title>
-<style>
-  /* --- Base & Background Decorations --- */
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  body {
-    background-color: #fdfdfd;
-    background-image: 
-      radial-gradient(#e0e0e0 1px, transparent 1px),
-      url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d1d1d1' fill-opacity='0.2'%3E%3Cpath d='M10 10l5 5m-5 0l5-5M80 20c0 5-5 5-5 10s5 5 5 10M20 80h10v10H20zM50 50l2-2 2 2-2 2-2-2z' stroke='%23d1d1d1' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='2'/%3E%3Cpath d='M40 10c2 0 3 2 3 4s-1 4-3 4-3-2-3-4 1-4 3-4z'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 40px 40px, 200px 200px;
-    font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
-    color: #444;
-    height: 100vh;
-    padding: 20px 50px;
-    min-width: 1200px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>集中作業環境</title>
+  <style>
 
-  /* --- Layout Structure --- */
-  .top-row {
-    display: flex;
-    gap: 30px;
-    height: 60%;
-  }
+    /* =====================
+       リセット・基本設定
+    ===================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  .bottom-row {
-    display: flex;
-    gap: 30px;
-    height: 35%;
-    align-items: flex-end;
-    padding: 0 40px 20px 40px; /* 左右に余白 */
-  }
+    body {
+      font-family: 'Georgia', 'Hiragino Mincho ProN', serif;
+      background: linear-gradient(135deg, #fdf9f4 0%, #f9f5ee 50%, #f5f0e8 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      user-select: none;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-  .card {
-    background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-    position: relative;
-    transition: transform 0.2s;
-  }
+    /* =====================
+       背景装飾
+    ===================== */
+    body::before {
+      content: '📚 ✏️ 📖 🌟 ✒️ 📝 ⭐ 📕 ✍️ 🌟 📗 ✏️ 📚';
+      position: fixed;
+      top: -50px;
+      left: -100px;
+      font-size: 120px;
+      opacity: 0.08;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(-15deg);
+      z-index: 0;
+    }
 
-  /* --- ① ノート (左上・縦長) --- */
-  .note-space {
-    flex: 0 0 350px; /* 幅固定、縦長 */
-    background-color: #fffef0; /* クリーム色 */
-    border: 1px solid #e0d8c0;
-    display: flex;
-    flex-direction: column;
-    padding: 40px 20px 20px 60px; /* 左側に余白 */
-    overflow: hidden;
-  }
+    body::after {
+      content: '🌟 ✏️ 📚 📖 ⭐ ✒️ 📝 ✍️ 🌟 📕 📗 ✏️';
+      position: fixed;
+      bottom: -50px;
+      right: -100px;
+      font-size: 120px;
+      opacity: 0.08;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(15deg);
+      z-index: 0;
+    }
 
-  /* ノートの赤い縦線 */
-  .note-space::before {
-    content: "";
-    position: absolute;
-    left: 45px;
-    top: 0;
-    bottom: 0;
-    width: 2px;
-    background-color: #ffb3b3;
-  }
+    /* =====================
+       ページタイトル
+    ===================== */
+    .page-title {
+      text-align: center;
+      font-size: 13px;
+      color: #a89070;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
 
-  .note-space h2 {
-    font-size: 18px;
-    color: #a0a0a0;
-    margin-bottom: 10px;
-    font-family: serif;
-  }
+    /* =====================
+       メイングリッド
+    ===================== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 18px;
+      max-width: 1300px;
+      margin: 0 auto;
+      min-height: calc(100vh - 120px);
+      position: relative;
+      z-index: 1;
+    }
 
-  .note-space textarea {
-    flex-grow: 1;
-    width: 100%;
-    border: none;
-    background: repeating-linear-gradient(transparent, transparent 31px, #d1e5f0 31px, #d1e5f0 32px);
-    line-height: 32px;
-    font-size: 16px;
-    outline: none;
-    resize: none;
-    color: #333;
-    padding-top: 4px;
-  }
+    /* =====================
+       カード共通スタイル
+    ===================== */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.1),
+        0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid #ede8dd;
+      position: relative;
+      cursor: grab;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
 
-  /* --- ② 教材スペース (右上・横長・額縁) --- */
-  .study-space {
-    flex: 1;
-    /* 豪華な金色の額縁 */
-    border: 18px solid;
-    border-image: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c) 1;
-    box-shadow: 
-      0 15px 35px rgba(0,0,0,0.2),
-      inset 0 0 10px rgba(0,0,0,0.5);
-    background: #333;
-    overflow: hidden;
-  }
+    .card:hover {
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.12),
+        0 2px 4px rgba(0,0,0,0.08);
+    }
 
-  .study-space iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #fff;
-  }
+    .card:active {
+      cursor: grabbing;
+      transform: translateY(-2px);
+    }
 
-  /* --- ④ 作業計画 (左下・広め) --- */
-  .plan-space {
-    flex: 2; /* タイマーより広く設定 */
-    height: 100%;
-    padding: 20px;
-    border: 1px solid #eee;
-  }
+    .card-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #8b7355;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #d4c4a0;
+    }
 
-  .plan-space h2 {
-    font-size: 20px;
-    margin-bottom: 15px;
-    color: #555;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+    /* =====================
+       ① ノートエリア（左上・縦長）
+    ===================== */
+    .note-card {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to right, #fffbf7 0%, #fffef8 40%, #fffef8 100%);
+      background-image:
+        linear-gradient(to right, #f5c8c8 0px, #f5c8c8 2px, transparent 2px),
+        repeating-linear-gradient(
+          transparent,
+          transparent 27px,
+          #e8e0d0 27px,
+          #e8e0d0 28px
+        );
+      background-position: 0 44px, 0 44px;
+      background-size: 100% 100%, 100% 100%;
+      border-radius: 12px;
+      box-shadow:
+        0 6px 20px rgba(0,0,0,0.12),
+        inset -2px 0 4px rgba(0,0,0,0.03);
+    }
 
-  .plan-columns {
-    display: flex;
-    gap: 15px;
-    height: calc(100% - 40px);
-  }
+    .note-card .card-title {
+      padding-left: 20px;
+      font-size: 14px;
+      font-style: italic;
+      color: #b0a080;
+      border-bottom: none;
+      margin-bottom: 6px;
+    }
 
-  .plan-col {
-    flex: 1;
-    background: #fdfdfd;
-    border-radius: 10px;
-    padding: 12px;
-    border: 1px solid #f0f0f0;
-  }
+    .note-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      line-height: 28px;
+      color: #4a4035;
+      resize: none;
+      padding: 0 12px 0 20px;
+      cursor: text;
+    }
 
-  .plan-col h3 {
-    font-size: 14px;
-    margin-bottom: 8px;
-    color: #888;
-    text-align: center;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-  }
+    /* =====================
+       右側コンテナ
+    ===================== */
+    .right-column {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
 
-  .plan-col ul {
-    list-style: none;
-    font-size: 14px;
-    line-height: 1.8;
-  }
+    /* =====================
+       ② 教材スペース（右上・豪華な額縁）
+    ===================== */
+    .material-card {
+      flex: 1;
+      padding: 4px;
+      background: linear-gradient(135deg, #2d1f0a 0%, #1a1208 50%, #2d1f0a 100%);
+      border-radius: 8px;
+      position: relative;
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.25),
+        inset 0 0 0 1px #8b6914,
+        inset 0 0 0 3px #d4af37,
+        inset 0 0 0 4px #8b6914,
+        inset 0 0 0 6px #e8c547,
+        inset 0 0 0 7px #8b6914,
+        inset 0 0 0 10px #d4af37;
+      cursor: grab;
+    }
 
-  /* --- ③ ポモドーロタイマー (右下・マスカット) --- */
-  .timer-space {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+    /* 額縁装飾コーナー */
+    .material-card::before,
+    .material-card::after {
+      content: '◆';
+      position: absolute;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-  .muscat-container {
-    position: relative;
-    width: 220px;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+    .material-card::before {
+      top: 10px;
+      left: 10px;
+    }
 
-  /* マスカットの粒々デザイン */
-  .muscat-bunch {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-  }
+    .material-card::after {
+      bottom: 10px;
+      right: 10px;
+    }
 
-  .grape {
-    position: absolute;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #d9f2a7, #85bb25);
-    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1), 2px 4px 8px rgba(0,0,0,0.1);
-    width: 60px;
-    height: 65px;
-  }
+    .frame-corner-tr {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-  /* 粒の配置 */
-  .g1 { top: 10%; left: 35%; }
-  .g2 { top: 25%; left: 15%; }
-  .g3 { top: 25%; left: 55%; }
-  .g4 { top: 50%; left: 25%; }
-  .g5 { top: 50%; left: 50%; }
-  .g6 { top: 70%; left: 38%; width: 55px; height: 60px; }
+    .frame-corner-bl {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-  /* 茎 */
-  .stem {
-    position: absolute;
-    top: -10px;
-    left: 48%;
-    width: 8px;
-    height: 30px;
-    background: #6d8c32;
-    border-radius: 4px;
-    transform: rotate(-10deg);
-    z-index: -1;
-  }
+    .material-label {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #c9940a, #e8c547, #c9940a);
+      color: #1a1208;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 4px 18px;
+      border-radius: 12px;
+      white-space: nowrap;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
-  .time-display {
-    position: relative;
-    z-index: 10;
-    font-size: 42px;
-    font-weight: bold;
-    color: #fff;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-    pointer-events: none;
-    font-family: 'Courier New', Courier, monospace;
-  }
+    .material-iframe-wrapper {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f5f0e8;
+    }
 
-  .timer-controls {
-    position: absolute;
-    bottom: -40px;
-    display: flex;
-    gap: 10px;
-  }
+    .material-iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #f5f0e8;
+    }
 
-  .btn {
-    padding: 5px 15px;
-    border: none;
-    border-radius: 15px;
-    font-size: 12px;
-    font-weight: bold;
-    cursor: pointer;
-    background: #fff;
-    color: #6d8c32;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #d9f2a7;
-  }
+    /* iframeプレースホルダー */
+    .iframe-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f5f0e8, #ede8de);
+      color: #a09070;
+      font-size: 12px;
+      text-align: center;
+      gap: 12px;
+      border-radius: 4px;
+    }
 
-</style>
+    .iframe-placeholder .icon {
+      font-size: 40px;
+      opacity: 0.5;
+    }
+
+    .iframe-placeholder p {
+      line-height: 1.8;
+      font-style: italic;
+    }
+
+    /* =====================
+       ③ ポモドーロタイマー（右下・マスカットモチーフ）
+    ===================== */
+    .timer-card {
+      background: linear-gradient(135deg, #f5faf7, #f0f7f4);
+      border: 1px solid #d4e8dc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px 24px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      min-height: 220px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.03);
+      position: relative;
+    }
+
+    /* マスカットイラスト */
+    .muscat-wrap {
+      position: relative;
+      width: 120px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* マスカットの枝 */
+    .muscat-stem {
+      position: absolute;
+      width: 3px;
+      height: 20px;
+      background: linear-gradient(to bottom, #5a7c4a, #4a6a38);
+      top: -5px;
+      border-radius: 2px;
+    }
+
+    /* マスカットの葉 */
+    .muscat-leaf {
+      position: absolute;
+      width: 24px;
+      height: 20px;
+      background: linear-gradient(135deg, #6ba85a, #4a8a38);
+      border-radius: 50% 0 50% 0;
+      top: -8px;
+      left: -15px;
+      transform: rotate(-25deg);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* マスカットの粒 */
+    .muscat-grape {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #8dd86d, #5ab842);
+      box-shadow:
+        inset -2px -2px 4px rgba(0,0,0,0.15),
+        0 3px 8px rgba(0,0,0,0.12);
+    }
+
+    .grape-1 { width: 24px; height: 24px; top: 0px; left: 48px; }
+    .grape-2 { width: 26px; height: 26px; top: 18px; left: 36px; }
+    .grape-3 { width: 26px; height: 26px; top: 18px; left: 62px; }
+    .grape-4 { width: 28px; height: 28px; top: 42px; left: 30px; }
+    .grape-5 { width: 28px; height: 28px; top: 42px; left: 62px; }
+    .grape-6 { width: 30px; height: 30px; top: 68px; left: 22px; }
+    .grape-7 { width: 30px; height: 30px; top: 68px; left: 58px; }
+    .grape-8 { width: 26px; height: 26px; top: 96px; left: 42px; }
+
+    /* タイマー数字（マスカット上に重なる） */
+    .timer-display-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      font-weight: bold;
+      color: #2d5a1a;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      text-shadow:
+        1px 1px 2px rgba(255,255,255,0.8),
+        -1px -1px 2px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+
+    /* タイマーラベル */
+    .timer-label {
+      font-size: 11px;
+      color: #5a8a4a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+
+    /* タイマーボタン */
+    .timer-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #5cb85c, #3d8b3d);
+      color: white;
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #d9534f, #a02020);
+      color: white;
+    }
+
+    /* =====================
+       ④ 作業計画（下段・左寄り）
+    ===================== */
+    .plan-card {
+      grid-column: 1 / 2;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      padding: 20px 28px;
+      background: linear-gradient(135deg, #fffef8, #fdf9f0);
+      border: 1px solid #e0d4a0;
+      flex-shrink: 0;
+      border-radius: 16px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.03);
+      max-width: 100%;
+      margin-right: 20px;
+    }
+
+    .plan-section-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #8b7040;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #d4b860;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .plan-section-title .icon {
+      font-size: 14px;
+    }
+
+    /* 目標リスト */
+    .goal-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .goal-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #5a4a30;
+    }
+
+    .goal-list li input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #8b7040;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* 目次リスト */
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toc-list li {
+      font-size: 13px;
+      color: #5a4a30;
+      padding: 6px 10px;
+      background: rgba(212,184,96,0.12);
+      border-radius: 6px;
+      border-left: 3px solid #d4b860;
+    }
+
+    /* 時間割 */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .schedule-table tr {
+      border-bottom: 1px dashed #e0d4a0;
+    }
+
+    .schedule-table tr:last-child {
+      border-bottom: none;
+    }
+
+    .schedule-table td {
+      padding: 6px 8px;
+      color: #5a4a30;
+    }
+
+    .schedule-table td:first-child {
+      color: #8b7040;
+      font-weight: bold;
+      width: 50px;
+      white-space: nowrap;
+    }
+
+  </style>
 </head>
 <body>
 
-  <!-- 背景装飾用の落書き (SVGイメージの代替として配置可能) -->
+  <p class="page-title">✦ Focus Space ✦</p>
 
-  <div class="top-row">
-    <!-- ① ノートスペース -->
-    <div class="card note-space">
-      <h2>Notes</h2>
-      <textarea placeholder="集中してメモを取りましょう..."></textarea>
+  <div class="main-grid">
+
+    <!-- ① ノートエリア（左上・縦長） -->
+    <div class="card note-card" id="noteCard">
+      <div class="card-title">📓 Notes</div>
+      <textarea
+        class="note-textarea"
+        placeholder="ここにメモを書いてください..."
+      ></textarea>
     </div>
 
-    <!-- ② 教材スペース -->
-    <div class="card study-space">
-      <iframe src="about:blank"></iframe>
-    </div>
-  </div>
+    <!-- 右カラム（教材 + タイマー） -->
+    <div class="right-column">
 
-  <div class="bottom-row">
-    <!-- ④ 作業計画スペース -->
-    <div class="card plan-space">
-      <h2>Today's Tasks</h2>
-      <div class="plan-columns">
-        <div class="plan-col">
-          <h3>Goals</h3>
-          <ul>
-            <li>・メインタスクの完了</li>
-            <li>・重要項目の整理</li>
-          </ul>
-        </div>
-        <div class="plan-col">
-          <h3>To-Do</h3>
-          <ul>
-            <li>□ 資料の読み込み</li>
-            <li>□ 構成案の作成</li>
-          </ul>
-        </div>
-        <div class="plan-col">
-          <h3>Time</h3>
-          <ul>
-            <li>09:00 Focus</li>
-            <li>12:00 Lunch</li>
-          </ul>
+      <!-- ② 教材スペース（右上・豪華額縁） -->
+      <div class="material-card" id="materialCard">
+        <span class="material-label">📖 教材スペース</span>
+        <span class="frame-corner-tr">◆</span>
+        <span class="frame-corner-bl">◆</span>
+        <div class="material-iframe-wrapper">
+          <div class="iframe-placeholder">
+            <div class="icon">🖼️</div>
+            <p>教材サイトのURLをここに表示できます<br>iframe に URL を設定してください</p>
+          </div>
+          <!-- 使用時は以下のコメントを解除してURLを設定 -->
+          <!-- <iframe src="https://example.com" title="教材"></iframe> -->
         </div>
       </div>
-    </div>
 
-    <!-- ③ マスカットタイマー -->
-    <div class="timer-space">
-      <div class="muscat-container">
-        <div class="stem"></div>
-        <div class="muscat-bunch">
-          <div class="grape g1"></div>
-          <div class="grape g2"></div>
-          <div class="grape g3"></div>
-          <div class="grape g4"></div>
-          <div class="grape g5"></div>
-          <div class="grape g6"></div>
+      <!-- ③ ポモドーロタイマー（右下・マスカットモチーフ） -->
+      <div class="card timer-card" id="timerCard">
+        <div class="muscat-wrap">
+          <div class="muscat-stem"></div>
+          <div class="muscat-leaf"></div>
+          <div class="muscat-grape grape-1"></div>
+          <div class="muscat-grape grape-2"></div>
+          <div class="muscat-grape grape-3"></div>
+          <div class="muscat-grape grape-4"></div>
+          <div class="muscat-grape grape-5"></div>
+          <div class="muscat-grape grape-6"></div>
+          <div class="muscat-grape grape-7"></div>
+          <div class="muscat-grape grape-8"></div>
+          <div class="timer-display-overlay">25:00</div>
         </div>
-        <div class="time-display">25:00</div>
-        <div class="timer-controls">
-          <button class="btn">START</button>
-          <button class="btn">RESET</button>
+        <div class="timer-label">🍇 Pomodoro Timer</div>
+        <div class="timer-buttons">
+          <button class="btn btn-start">▶ Start</button>
+          <button class="btn btn-reset">↺ Reset</button>
         </div>
       </div>
+
     </div>
+
+    <!-- ④ 作業計画（下段・左寄り） -->
+    <div class="card plan-card" id="planCard">
+
+      <!-- 今日の目標 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">🎯</span> 今日の目標
+        </div>
+        <ul class="goal-list">
+          <li><input type="checkbox" /> 目標①を入力してください</li>
+          <li><input type="checkbox" /> 目標②を入力してください</li>
+          <li><input type="checkbox" /> 目標③を入力してください</li>
+        </ul>
+      </div>
+
+      <!-- 目次 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">📋</span> 目次 / To-Do
+        </div>
+        <ul class="toc-list">
+          <li>第1章：〇〇について</li>
+          <li>第2章：△△について</li>
+          <li>第3章：□□について</li>
+        </ul>
+      </div>
+
+      <!-- 時間割 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">🕐</span> 時間割
+        </div>
+        <table class="schedule-table">
+          <tr><td>10:00</td><td>勉強・作業①</td></tr>
+          <tr><td>11:00</td><td>休憩</td></tr>
+          <tr><td>11:30</td><td>勉強・作業②</td></tr>
+          <tr><td>13:00</td><td>振り返り</td></tr>
+        </table>
+      </div>
+
+    </div>
+
   </div>
 
-  <script>
-    // JavaScript logic remains unchanged as per instruction.
-  </script>
 </body>
 </html>
