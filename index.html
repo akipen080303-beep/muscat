@@ -1,687 +1,648 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>集中学習ダッシュボード</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>集中作業環境</title>
+  <style>
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #f6f1e8 0%, #f8f5f0 50%, #fbf7f2 100%);
-            min-height: 100vh;
-            color: #3d3d3d;
-            overflow-x: hidden;
-            position: relative;
-            padding: 40px 60px;
-        }
+    /* =====================
+       リセット・基本設定
+    ===================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        /* 背景装飾 */
-        .bg-decoration {
-            position: fixed;
-            z-index: -1;
-            opacity: 0.06;
-            font-size: 0;
-        }
+    body {
+      font-family: 'Georgia', 'Hiragino Mincho ProN', serif;
+      background: linear-gradient(135deg, #fdf9f4 0%, #f9f5ee 50%, #f5f0e8 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+      user-select: none;
+      position: relative;
+      overflow-x: hidden;
+    }
 
-        .book { top: 10%; left: 8%; font-size: 120px; }
-        .pencil { top: 65%; right: 10%; font-size: 100px; transform: rotate(-15deg); }
-        .notebook { bottom: 15%; left: 12%; font-size: 90px; }
-        .star { top: 30%; right: 15%; font-size: 60px; }
-        .pen { bottom: 25%; left: 5%; font-size: 80px; }
+    /* =====================
+       背景装飾
+    ===================== */
+    body::before {
+      content: '📚 ✏️ 📖 🌟 ✒️ 📝 ⭐ 📕 ✍️ 🌟 📗 ✏️ 📚';
+      position: fixed;
+      top: -50px;
+      left: -100px;
+      font-size: 120px;
+      opacity: 0.08;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(-15deg);
+      z-index: 0;
+    }
 
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-areas: 
-                "notes viewer"
-                "tasks timer";
-            grid-template-columns: 1.3fr 1fr;
-            grid-template-rows: 1fr 1.2fr;
-            gap: 30px;
-            min-height: 90vh;
-        }
+    body::after {
+      content: '🌟 ✏️ 📚 📖 ⭐ ✒️ 📝 ✍️ 🌟 📕 📗 ✏️';
+      position: fixed;
+      bottom: -50px;
+      right: -100px;
+      font-size: 120px;
+      opacity: 0.08;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(15deg);
+      z-index: 0;
+    }
 
-        .card {
-            border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 8px 25px rgba(0,0,0,0.04);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+    /* =====================
+       ページタイトル
+    ===================== */
+    .page-title {
+      text-align: center;
+      font-size: 13px;
+      color: #a89070;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 1;
+    }
 
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 30px 80px rgba(0,0,0,0.12), 0 12px 35px rgba(0,0,0,0.06);
-        }
+    /* =====================
+       メイングリッド
+    ===================== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 18px;
+      max-width: 1300px;
+      margin: 0 auto;
+      min-height: calc(100vh - 120px);
+      position: relative;
+      z-index: 1;
+    }
 
-        /* ノートスペース */
-        .notes {
-            grid-area: notes;
-            background: linear-gradient(135deg, #fefcf8 0%, #fffaf4 100%);
-            padding: 35px;
-            border: 1px solid #f0e6d9;
-            position: relative;
-        }
+    /* =====================
+       カード共通スタイル
+    ===================== */
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.1),
+        0 1px 3px rgba(0,0,0,0.05);
+      border: 1px solid #ede8dd;
+      position: relative;
+      cursor: grab;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
 
-        .notes::before {
-            content: '';
-            position: absolute;
-            left: 35px;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(180deg, #e53e3e 0%, #fc8181 100%);
-            border-radius: 2px;
-        }
+    .card:hover {
+      box-shadow:
+        0 6px 16px rgba(0,0,0,0.12),
+        0 2px 4px rgba(0,0,0,0.08);
+    }
 
-        .notes-header {
-            color: #5a4a40;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            padding-left: 25px;
-            border-bottom: 2px solid #e6d4c5;
-            padding-bottom: 12px;
-        }
+    .card:active {
+      cursor: grabbing;
+      transform: translateY(-2px);
+    }
 
-        .notes-content {
-            height: 380px;
-            position: relative;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent,
-                transparent 54px,
-                #f0e6d9 55px,
-                #f0e6d9 56px
-            );
-            border-radius: 16px;
-            padding: 25px;
-            font-family: 'Georgia', serif;
-            font-size: 16px;
-            line-height: 2.2;
-            overflow-y: auto;
-            border: 1px solid #f0e6d9;
-        }
+    .card-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #8b7355;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #d4c4a0;
+    }
 
-        .notes-content:focus {
-            outline: none;
-            box-shadow: inset 0 0 0 2px #f2c94c;
-        }
+    /* =====================
+       ① ノートエリア（左上・縦長）
+    ===================== */
+    .note-card {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to right, #fffbf7 0%, #fffef8 40%, #fffef8 100%);
+      background-image:
+        linear-gradient(to right, #f5c8c8 0px, #f5c8c8 2px, transparent 2px),
+        repeating-linear-gradient(
+          transparent,
+          transparent 27px,
+          #e8e0d0 27px,
+          #e8e0d0 28px
+        );
+      background-position: 0 44px, 0 44px;
+      background-size: 100% 100%, 100% 100%;
+      border-radius: 12px;
+      box-shadow:
+        0 6px 20px rgba(0,0,0,0.12),
+        inset -2px 0 4px rgba(0,0,0,0.03);
+    }
 
-        .notes-content::placeholder {
-            color: #a69f92;
-            font-style: italic;
-        }
+    .note-card .card-title {
+      padding-left: 20px;
+      font-size: 14px;
+      font-style: italic;
+      color: #b0a080;
+      border-bottom: none;
+      margin-bottom: 6px;
+    }
 
-        /* 教材閲覧スペース */
-        .viewer {
-            grid-area: viewer;
-            min-height: 480px;
-        }
+    .note-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      line-height: 28px;
+      color: #4a4035;
+      resize: none;
+      padding: 0 12px 0 20px;
+      cursor: text;
+    }
 
-        .gold-frame {
-            position: relative;
-            height: 100%;
-            border-radius: 24px;
-            overflow: hidden;
-        }
+    /* =====================
+       右側コンテナ
+    ===================== */
+    .right-column {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
 
-        .gold-frame::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: conic-gradient(from 0deg, #f2c94c, #f4b400, #f2c94c, #f4b400);
-            border-radius: 24px;
-            padding: 12px;
-            z-index: 1;
-        }
+    /* =====================
+       ② 教材スペース（右上・豪華な額縁）
+    ===================== */
+    .material-card {
+      flex: 1;
+      padding: 4px;
+      background: linear-gradient(135deg, #2d1f0a 0%, #1a1208 50%, #2d1f0a 100%);
+      border-radius: 8px;
+      position: relative;
+      box-shadow:
+        0 8px 24px rgba(0,0,0,0.25),
+        inset 0 0 0 1px #8b6914,
+        inset 0 0 0 3px #d4af37,
+        inset 0 0 0 4px #8b6914,
+        inset 0 0 0 6px #e8c547,
+        inset 0 0 0 7px #8b6914,
+        inset 0 0 0 10px #d4af37;
+      cursor: grab;
+    }
 
-        .gold-frame::after {
-            content: '';
-            position: absolute;
-            inset: 12px;
-            background: linear-gradient(135deg, #fffdf9 0%, #fefcf8 100%);
-            border-radius: 16px;
-            z-index: 2;
-        }
+    /* 額縁装飾コーナー */
+    .material-card::before,
+    .material-card::after {
+      content: '◆';
+      position: absolute;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-        .viewer-content {
-            position: relative;
-            z-index: 3;
-            height: 100%;
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-        }
+    .material-card::before {
+      top: 10px;
+      left: 10px;
+    }
 
-        .viewer-header {
-            color: #b8860b;
-            font-size: 20px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 20px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+    .material-card::after {
+      bottom: 10px;
+      right: 10px;
+    }
 
-        .url-input-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
+    .frame-corner-tr {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-        .url-input {
-            flex: 1;
-            padding: 12px 16px;
-            border: 2px solid #f0e6d9;
-            border-radius: 12px;
-            font-size: 15px;
-            background: rgba(255,255,255,0.9);
-            transition: all 0.3s ease;
-        }
+    .frame-corner-bl {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      font-size: 16px;
+      color: #e8c547;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
 
-        .url-input:focus {
-            outline: none;
-            border-color: #f2c94c;
-            box-shadow: 0 0 0 4px rgba(242,201,76,0.15);
-        }
+    .material-label {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #c9940a, #e8c547, #c9940a);
+      color: #1a1208;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      padding: 4px 18px;
+      border-radius: 12px;
+      white-space: nowrap;
+      z-index: 10;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
-        .load-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #f2c94c, #f4b400);
-            color: #3d3d3d;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(242,201,76,0.3);
-        }
+    .material-iframe-wrapper {
+      width: 100%;
+      height: 100%;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f5f0e8;
+    }
 
-        .load-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 28px rgba(242,201,76,0.4);
-        }
+    .material-iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #f5f0e8;
+    }
 
-        .viewer-iframe {
-            flex: 1;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #f8f5f2 0%, #fbf9f6 100%);
-        }
+    /* iframeプレースホルダー */
+    .iframe-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f5f0e8, #ede8de);
+      color: #a09070;
+      font-size: 12px;
+      text-align: center;
+      gap: 12px;
+      border-radius: 4px;
+    }
 
-        /* タスクスペース */
-        .tasks {
-            grid-area: tasks;
-            background: linear-gradient(135deg, #fffdf9 0%, #faf8f5 100%);
-            padding: 30px;
-            border: 1px solid #f0e6d9;
-        }
+    .iframe-placeholder .icon {
+      font-size: 40px;
+      opacity: 0.5;
+    }
 
-        .tasks-header {
-            color: #5a4a40;
-            font-size: 20px;
-            font-weight: 700;
-            margin-bottom: 25px;
-            text-align: center;
-        }
+    .iframe-placeholder p {
+      line-height: 1.8;
+      font-style: italic;
+    }
 
-        .task-section {
-            margin-bottom: 28px;
-            padding: 20px;
-            background: rgba(255,255,255,0.6);
-            border-radius: 16px;
-            border: 1px solid #f0e6d9;
-        }
+    /* =====================
+       ③ ポモドーロタイマー（右下・マスカットモチーフ）
+    ===================== */
+    .timer-card {
+      background: linear-gradient(135deg, #f5faf7, #f0f7f4);
+      border: 1px solid #d4e8dc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 20px 24px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      min-height: 220px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.03);
+      position: relative;
+    }
 
-        .task-section:last-child {
-            margin-bottom: 0;
-        }
+    /* マスカットイラスト */
+    .muscat-wrap {
+      position: relative;
+      width: 120px;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .section-title {
-            font-size: 17px;
-            font-weight: 600;
-            color: #3d3d3d;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    /* マスカットの枝 */
+    .muscat-stem {
+      position: absolute;
+      width: 3px;
+      height: 20px;
+      background: linear-gradient(to bottom, #5a7c4a, #4a6a38);
+      top: -5px;
+      border-radius: 2px;
+    }
 
-        .task-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-            padding: 10px;
-            background: rgba(255,255,255,0.8);
-            border-radius: 10px;
-            transition: all 0.3s ease;
-        }
+    /* マスカットの葉 */
+    .muscat-leaf {
+      position: absolute;
+      width: 24px;
+      height: 20px;
+      background: linear-gradient(135deg, #6ba85a, #4a8a38);
+      border-radius: 50% 0 50% 0;
+      top: -8px;
+      left: -15px;
+      transform: rotate(-25deg);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-        .task-item:last-child {
-            margin-bottom: 0;
-        }
+    /* マスカットの粒 */
+    .muscat-grape {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #8dd86d, #5ab842);
+      box-shadow:
+        inset -2px -2px 4px rgba(0,0,0,0.15),
+        0 3px 8px rgba(0,0,0,0.12);
+    }
 
-        .task-checkbox {
-            width: 20px;
-            height: 20px;
-            accent-color: #f2c94c;
-            cursor: pointer;
-        }
+    .grape-1 { width: 24px; height: 24px; top: 0px; left: 48px; }
+    .grape-2 { width: 26px; height: 26px; top: 18px; left: 36px; }
+    .grape-3 { width: 26px; height: 26px; top: 18px; left: 62px; }
+    .grape-4 { width: 28px; height: 28px; top: 42px; left: 30px; }
+    .grape-5 { width: 28px; height: 28px; top: 42px; left: 62px; }
+    .grape-6 { width: 30px; height: 30px; top: 68px; left: 22px; }
+    .grape-7 { width: 30px; height: 30px; top: 68px; left: 58px; }
+    .grape-8 { width: 26px; height: 26px; top: 96px; left: 42px; }
 
-        .task-text {
-            flex: 1;
-            font-size: 15px;
-            line-height: 1.5;
-        }
+    /* タイマー数字（マスカット上に重なる） */
+    .timer-display-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 48px;
+      font-weight: bold;
+      color: #2d5a1a;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      text-shadow:
+        1px 1px 2px rgba(255,255,255,0.8),
+        -1px -1px 2px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
 
-        .task-item.completed .task-text {
-            text-decoration: line-through;
-            opacity: 0.6;
-        }
+    /* タイマーラベル */
+    .timer-label {
+      font-size: 11px;
+      color: #5a8a4a;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
 
-        .delete-btn {
-            background: none;
-            border: none;
-            color: #a69f92;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
+    /* タイマーボタン */
+    .timer-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
 
-        .delete-btn:hover {
-            background: #ffeaa7;
-            color: #3d3d3d;
-        }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
 
-        .add-task-input {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
 
-        .add-task-input input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #f0e6d9;
-            border-radius: 8px;
-            font-size: 15px;
-        }
+    .btn:active {
+      transform: translateY(0);
+    }
 
-        .add-btn {
-            padding: 10px 18px;
-            background: linear-gradient(135deg, #f2c94c, #f4b400);
-            color: #3d3d3d;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+    .btn-start {
+      background: linear-gradient(135deg, #5cb85c, #3d8b3d);
+      color: white;
+    }
 
-        .add-btn:hover {
-            transform: translateY(-1px);
-        }
+    .btn-reset {
+      background: linear-gradient(135deg, #d9534f, #a02020);
+      color: white;
+    }
 
-        .schedule-textarea {
-            width: 100%;
-            min-height: 100px;
-            padding: 14px;
-            border: 1px solid #f0e6d9;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: inherit;
-            resize: vertical;
-            background: rgba(255,255,255,0.8);
-        }
+    /* =====================
+       ④ 作業計画（下段・左寄り）
+    ===================== */
+    .plan-card {
+      grid-column: 1 / 2;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+      padding: 20px 28px;
+      background: linear-gradient(135deg, #fffef8, #fdf9f0);
+      border: 1px solid #e0d4a0;
+      flex-shrink: 0;
+      border-radius: 16px;
+      box-shadow:
+        0 4px 12px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.03);
+      max-width: 100%;
+      margin-right: 20px;
+    }
 
-        /* ポモドーロタイマー */
-        .timer {
-            grid-area: timer;
-            background: linear-gradient(135deg, #f0f9f4 0%, #e8f5e8 100%);
-            padding: 25px;
-            text-align: center;
-            height: fit-content;
-            margin-top: auto;
-            border: 1px solid #d1e8d4;
-        }
+    .plan-section-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #8b7040;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #d4b860;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
 
-        .timer-header {
-            color: #2d5f3f;
-            font-size: 19px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
+    .plan-section-title .icon {
+      font-size: 14px;
+    }
 
-        .grape-cluster {
-            position: relative;
-            width: 240px;
-            height: 260px;
-            margin: 0 auto 25px;
-        }
+    /* 目標リスト */
+    .goal-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-        .grape {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle at 40% 40%, #86de54 0%, #66bb6a 45%, #4caf50 100%);
-            box-shadow: 
-                0 6px 16px rgba(102,187,106,0.4),
-                inset 0 -3px 6px rgba(0,0,0,0.2),
-                inset 0 2px 4px rgba(255,255,255,0.3);
-        }
+    .goal-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #5a4a30;
+    }
 
-        .grape:nth-child(1) { width: 40px; height: 40px; top: 15px; left: 95px; }
-        .grape:nth-child(2) { width: 45px; height: 45px; top: 30px; left: 65px; }
-        .grape:nth-child(3) { width: 48px; height: 48px; top: 35px; left: 130px; }
-        .grape:nth-child(4) { width: 44px; height: 44px; top: 65px; left: 45px; }
-        .grape:nth-child(5) { width: 52px; height: 52px; top: 72px; left: 105px; }
-        .grape:nth-child(6) { width: 46px; height: 46px; top: 70px; left: 165px; }
-        .grape:nth-child(7) { width: 42px; height: 42px; top: 110px; left: 75px; }
-        .grape:nth-child(8) { width: 48px; height: 48px; top: 112px; left: 140px; }
-        .grape:nth-child(9) { width: 40px; height: 40px; top: 150px; left: 105px; }
-        .grape:nth-child(10) { width: 38px; height: 38px; top: 185px; left: 105px; }
+    .goal-list li input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #8b7040;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
-        .timer-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 50px;
-            font-weight: 800;
-            color: #2e7d32;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            z-index: 10;
-            min-width: 160px;
-        }
+    /* 目次リスト */
+    .toc-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-        .timer-controls {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
+    .toc-list li {
+      font-size: 13px;
+      color: #5a4a30;
+      padding: 6px 10px;
+      background: rgba(212,184,96,0.12);
+      border-radius: 6px;
+      border-left: 3px solid #d4b860;
+    }
 
-        .timer-btn {
-            padding: 14px 20px;
-            border: none;
-            border-radius: 16px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-        }
+    /* 時間割 */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
 
-        .btn-start { background: linear-gradient(135deg, #52c41a, #389e0d); color: white; }
-        .btn-break { background: linear-gradient(135deg, #fa8c16, #d46b0f); color: white; }
-        .btn-reset { background: linear-gradient(135deg, #f2c94c, #f4b400); color: #3d3d3d; }
-        .btn-set { background: linear-gradient(135deg, #1890ff, #096dd9); color: white; }
+    .schedule-table tr {
+      border-bottom: 1px dashed #e0d4a0;
+    }
 
-        .timer-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
-        }
+    .schedule-table tr:last-child {
+      border-bottom: none;
+    }
 
-        @media (max-width: 1400px) {
-            .container {
-                grid-template-columns: 1fr;
-                grid-template-areas: 
-                    "notes"
-                    "viewer"
-                    "tasks"
-                    "timer";
-                gap: 25px;
-            }
-        }
-    </style>
+    .schedule-table td {
+      padding: 6px 8px;
+      color: #5a4a30;
+    }
+
+    .schedule-table td:first-child {
+      color: #8b7040;
+      font-weight: bold;
+      width: 50px;
+      white-space: nowrap;
+    }
+
+  </style>
 </head>
 <body>
-    <!-- 背景装飾 -->
-    <div class="bg-decoration book">📚</div>
-    <div class="bg-decoration pencil">✏️</div>
-    <div class="bg-decoration notebook">📓</div>
-    <div class="bg-decoration star">⭐</div>
-    <div class="bg-decoration pen">🖊️</div>
 
-    <div class="container">
-        <!-- ノートスペース -->
-        <div class="card notes">
-            <div class="notes-header">📝 Notes</div>
-            <div class="notes-content" 
-                 contenteditable="true" 
-                 placeholder="ここに学習メモや考えを書き込んでください...&#10;&#10;• 重要なポイント&#10;• 気づいたこと&#10;• 次にやるべきこと"
-                 spellcheck="false"></div>
-        </div>
+  <p class="page-title">✦ Focus Space ✦</p>
 
-        <!-- 教材閲覧スペース -->
-        <div class="card viewer">
-            <div class="gold-frame">
-                <div class="viewer-content">
-                    <div class="viewer-header">📚 Learning Viewer</div>
-                    <div class="url-input-group">
-                        <input type="url" class="url-input" id="urlInput" placeholder="YouTubeや教材のURLを入力...">
-                        <button class="load-btn" onclick="loadViewer()">開く</button>
-                    </div>
-                    <iframe class="viewer-iframe" id="viewerFrame" src="about:blank"></iframe>
-                </div>
-            </div>
-        </div>
+  <div class="main-grid">
 
-        <!-- タスクスペース -->
-        <div class="card tasks">
-            <div class="tasks-header">📋 Tasks</div>
-            
-            <!-- 今日の目標 -->
-            <div class="task-section" id="goals-section">
-                <div class="section-title">🎯 今日の目標</div>
-                <div id="goals-list">
-                    <div class="task-item" data-task="宿題を終わらせる">
-                        <input type="checkbox" class="task-checkbox">
-                        <span class="task-text">宿題を終わらせる</span>
-                    </div>
-                    <div class="task-item" data-task="ノートを復習する">
-                        <input type="checkbox" class="task-checkbox">
-                        <span class="task-text">ノートを復習する</span>
-                    </div>
-                    <div class="task-item" data-task="重要単語を覚える">
-                        <input type="checkbox" class="task-checkbox">
-                        <span class="task-text">重要単語を覚える</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- To-Doリスト -->
-            <div class="task-section">
-                <div class="section-title">📝 To-Doリスト</div>
-                <div id="todo-list"></div>
-                <div class="add-task-input">
-                    <input type="text" id="new-task-input" placeholder="新しいタスクを追加...">
-                    <button class="add-btn" onclick="addTodo()">追加</button>
-                </div>
-            </div>
-
-            <!-- スケジュール -->
-            <div class="task-section">
-                <div class="section-title">⏰ スケジュール</div>
-                <textarea class="schedule-textarea" 
-                          placeholder="09:00-10:00 数学演習&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩&#10;10:30-11:30 英語単語暗記&#10;&#10;予定を記入してください..."></textarea>
-            </div>
-        </div>
-
-        <!-- ポモドーロタイマー -->
-        <div class="card timer">
-            <div class="timer-header">⏱️ Timer</div>
-            <div class="grape-cluster">
-                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
-                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
-                <div class="grape"></div><div class="grape"></div><div class="grape"></div>
-                <div class="grape"></div>
-                <div class="timer-display" id="timer-display">25:00</div>
-            </div>
-            <div class="timer-controls">
-                <button class="timer-btn btn-start" onclick="startTimer(25)">Start</button>
-                <button class="timer-btn btn-break" onclick="startBreak(5)">Break</button>
-                <button class="timer-btn btn-reset" onclick="resetTimer()">Reset</button>
-                <button class="timer-btn btn-set" onclick="setCustomTime()">Set</button>
-            </div>
-        </div>
+    <!-- ① ノートエリア（左上・縦長） -->
+    <div class="card note-card" id="noteCard">
+      <div class="card-title">📓 Notes</div>
+      <textarea
+        class="note-textarea"
+        placeholder="ここにメモを書いてください..."
+      ></textarea>
     </div>
 
-    <script>
-        let timerInterval = null;
-        let timeLeft = 25 * 60;
-        let isRunning = false;
+    <!-- 右カラム（教材 + タイマー） -->
+    <div class="right-column">
 
-        // localStorage 初期化
-        function initStorage() {
-            if (!localStorage.getItem('todos')) {
-                localStorage.setItem('todos', JSON.stringify([]));
-            }
-            if (!localStorage.getItem('goals')) {
-                localStorage.setItem('goals', JSON.stringify([                    { text: '宿題を終わらせる', completed: false },
-                    { text: 'ノートを復習する', completed: false },
-                    { text: '重要単語を覚える', completed: false }
-                ]));
-            }
-            loadTodos();
-            loadGoals();
-        }
+      <!-- ② 教材スペース（右上・豪華額縁） -->
+      <div class="material-card" id="materialCard">
+        <span class="material-label">📖 教材スペース</span>
+        <span class="frame-corner-tr">◆</span>
+        <span class="frame-corner-bl">◆</span>
+        <div class="material-iframe-wrapper">
+          <div class="iframe-placeholder">
+            <div class="icon">🖼️</div>
+            <p>教材サイトのURLをここに表示できます<br>iframe に URL を設定してください</p>
+          </div>
+          <!-- 使用時は以下のコメントを解除してURLを設定 -->
+          <!-- <iframe src="https://example.com" title="教材"></iframe> -->
+        </div>
+      </div>
 
-        // 目標ロード・保存
-        function loadGoals() {
-            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
-            const container = document.getElementById('goals-list');
-            container.innerHTML = '';
-            goals.forEach((goal, index) => {
-                const item = document.createElement('div');
-                item.className = `task-item ${goal.completed ? 'completed' : ''}`;
-                item.dataset.index = index;
-                item.innerHTML = `
-                    <input type="checkbox" class="task-checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})">
-                    <span class="task-text">${goal.text}</span>
-                `;
-                container.appendChild(item);
-            });
-        }
+      <!-- ③ ポモドーロタイマー（右下・マスカットモチーフ） -->
+      <div class="card timer-card" id="timerCard">
+        <div class="muscat-wrap">
+          <div class="muscat-stem"></div>
+          <div class="muscat-leaf"></div>
+          <div class="muscat-grape grape-1"></div>
+          <div class="muscat-grape grape-2"></div>
+          <div class="muscat-grape grape-3"></div>
+          <div class="muscat-grape grape-4"></div>
+          <div class="muscat-grape grape-5"></div>
+          <div class="muscat-grape grape-6"></div>
+          <div class="muscat-grape grape-7"></div>
+          <div class="muscat-grape grape-8"></div>
+          <div class="timer-display-overlay">25:00</div>
+        </div>
+        <div class="timer-label">🍇 Pomodoro Timer</div>
+        <div class="timer-buttons">
+          <button class="btn btn-start">▶ Start</button>
+          <button class="btn btn-reset">↺ Reset</button>
+        </div>
+      </div>
 
-        function toggleGoal(index) {
-            const goals = JSON.parse(localStorage.getItem('goals') || '[]');
-            goals[index].completed = !goals[index].completed;
-            localStorage.setItem('goals', JSON.stringify(goals));
-            loadGoals();
-        }
+    </div>
 
-        // ToDoリスト
-        function loadTodos() {
-            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
-            const container = document.getElementById('todo-list');
-            container.innerHTML = '';
-            todos.forEach((todo, index) => {
-                const item = document.createElement('div');
-                item.className = `task-item ${todo.completed ? 'completed' : ''}`;
-                item.innerHTML = `
-                    <input type="checkbox" class="task-checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})">
-                    <span class="task-text">${todo.text}</span>
-                    <button class="delete-btn" onclick="deleteTodo(${index})">🗑️</button>
-                `;
-                container.appendChild(item);
-            });
-        }
+    <!-- ④ 作業計画（下段・左寄り） -->
+    <div class="card plan-card" id="planCard">
 
-        function addTodo() {
-            const input = document.getElementById('new-task-input');
-            const text = input.value.trim();
-            if (text) {
-                const todos = JSON.parse(localStorage.getItem('todos') || '[]');
-                todos.push({ text, completed: false });
-                localStorage.setItem('todos', JSON.stringify(todos));
-                input.value = '';
-                loadTodos();
-            }
-        }
+      <!-- 今日の目標 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">🎯</span> 今日の目標
+        </div>
+        <ul class="goal-list">
+          <li><input type="checkbox" /> 目標①を入力してください</li>
+          <li><input type="checkbox" /> 目標②を入力してください</li>
+          <li><input type="checkbox" /> 目標③を入力してください</li>
+        </ul>
+      </div>
 
-        function toggleTodo(index) {
-            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
-            todos[index].completed = !todos[index].completed;
-            localStorage.setItem('todos', JSON.stringify(todos));
-            loadTodos();
-        }
+      <!-- 目次 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">📋</span> 目次 / To-Do
+        </div>
+        <ul class="toc-list">
+          <li>第1章：〇〇について</li>
+          <li>第2章：△△について</li>
+          <li>第3章：□□について</li>
+        </ul>
+      </div>
 
-        function deleteTodo(index) {
-            const todos = JSON.parse(localStorage.getItem('todos') || '[]');
-            todos.splice(index, 1);
-            localStorage.setItem('todos', JSON.stringify(todos));
-            loadTodos();
-        }
+      <!-- 時間割 -->
+      <div class="plan-section">
+        <div class="plan-section-title">
+          <span class="icon">🕐</span> 時間割
+        </div>
+        <table class="schedule-table">
+          <tr><td>10:00</td><td>勉強・作業①</td></tr>
+          <tr><td>11:00</td><td>休憩</td></tr>
+          <tr><td>11:30</td><td>勉強・作業②</td></tr>
+          <tr><td>13:00</td><td>振り返り</td></tr>
+        </table>
+      </div>
 
-        // 教材ビューア
-        function loadViewer() {
-            const url = document.getElementById('urlInput').value;
-            if (url) {
-                const iframe = document.getElementById('viewerFrame');
-                iframe.src = url.includes('http') ? url : 'https://' + url;
-            }
-        }
+    </div>
 
-        // タイマー
-        function updateDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            document.getElementById('timer-display').textContent = 
-                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
+  </div>
 
-        function startTimer(minutes) {
-            if (isRunning) return;
-            timeLeft = minutes * 60;
-            isRunning = true;
-            timerInterval = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    alert('時間です！お疲れ様でした！');
-                    return;
-                }
-                timeLeft--;
-                updateDisplay();
-            }, 1000);
-            updateDisplay();
-        }
-
-        function startBreak(minutes) {
-            startTimer(minutes);
-        }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            timeLeft = 25 * 60;
-            updateDisplay();
-        }
-
-        function setCustomTime() {
-            const minutes = prompt('何分タイマーにしますか？（数字のみ）', '25');
-            if (minutes && !isNaN(minutes) && minutes > 0) {
-                resetTimer();
-                timeLeft = parseInt(minutes) * 60;
-                updateDisplay();
-            }
-        }
-
-        // 初期化
-        initStorage();
-        updateDisplay();
-    </script>
 </body>
 </html>
