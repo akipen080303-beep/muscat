@@ -1,867 +1,498 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>集中学習ダッシュボード</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>集中作業環境</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-    body {
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      background: linear-gradient(135deg, #f6f1e8 0%, #faf7f0 50%, #f2ede4 100%);
-      min-height: 100vh;
-      padding: 40px;
-      position: relative;
-      overflow-x: hidden;
-      color: #3d3d3d;
-    }
+        /* 背景装飾 */
+        body::before {
+            content: '📚';
+            position: fixed;
+            top: 5%;
+            left: 2%;
+            font-size: 80px;
+            opacity: 0.08;
+            z-index: -1;
+        }
 
-    body::before {
-      content: '📚 ✏️ 📖 🌟 ✒️ 📝 ⭐ 📕 ✍️ 🌟 📗 ✏️ 📚 ⭐ 📓 ✏️ 🌟';
-      position: fixed;
-      top: -40px;
-      left: -150px;
-      font-size: 100px;
-      opacity: 0.06;
-      white-space: nowrap;
-      pointer-events: none;
-      transform: rotate(-20deg);
-      z-index: 0;
-      letter-spacing: 20px;
-    }
+        body::after {
+            content: '✏️';
+            position: fixed;
+            bottom: 15%;
+            right: 3%;
+            font-size: 60px;
+            opacity: 0.1;
+            z-index: -1;
+            transform: rotate(-45deg);
+        }
 
-    body::after {
-      content: '🌟 ✏️ 📚 📖 ⭐ ✒️ 📝 ✍️ 🌟 📕 📗 ✏️ 🌟 📓 ✏️';
-      position: fixed;
-      bottom: -40px;
-      right: -150px;
-      font-size: 100px;
-      opacity: 0.06;
-      white-space: nowrap;
-      pointer-events: none;
-      transform: rotate(20deg);
-      z-index: 0;
-      letter-spacing: 20px;
-    }
+        .workspace {
+            max-width: 1600px;
+            margin: 30px auto;
+            padding: 30px;
+            display: grid;
+            grid-template-areas: 
+                "notebook textbook"
+                "plan pomodoro";
+            grid-template-columns: 1.2fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 25px;
+            min-height: 100vh;
+        }
 
-    .page-title {
-      text-align: center;
-      font-size: 28px;
-      font-weight: 700;
-      color: #5a5a5a;
-      margin-bottom: 32px;
-      position: relative;
-      z-index: 1;
-      letter-spacing: 1px;
-    }
+        /* ノートエリア - 縦長 */
+        .notebook {
+            grid-area: notebook;
+            background: linear-gradient(135deg, #fef9f3 0%, #fdfbf7 100%);
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+            position: relative;
+            border: 1px solid #f0e6d8;
+            min-height: 550px;
+        }
 
-    .main-grid {
-      display: grid;
-      grid-template-columns: 1.3fr 1fr;
-      grid-template-rows: auto auto;
-      gap: 24px;
-      max-width: 1400px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      min-height: calc(100vh - 120px);
-    }
+        .notebook::before {
+            content: '';
+            position: absolute;
+            left: 25px;
+            top: 30px;
+            bottom: 30px;
+            width: 3px;
+            background: linear-gradient(180deg, #d32f2f 0%, #ff6b6b 100%);
+            border-radius: 2px;
+        }
 
-    .card {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 28px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(242, 201, 76, 0.1);
-      position: relative;
-      transition: box-shadow 0.3s ease, transform 0.3s ease;
-    }
+        .notebook h2 {
+            color: #5d4037;
+            font-size: 18px;
+            margin-bottom: 20px;
+            margin-left: 20px;
+            font-weight: 700;
+            border-bottom: 2px solid #d7ccc8;
+            padding-bottom: 10px;
+        }
 
-    .card:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-      transform: translateY(-2px);
-    }
+        .notebook textarea {
+            width: 100%;
+            height: 450px;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            line-height: 2.2;
+            resize: none;
+            font-family: 'Georgia', serif;
+            color: #3e2723;
+            padding: 20px;
+            outline: none;
+            position: relative;
+            background-image: repeating-linear-gradient(
+                180deg,
+                transparent 0px,
+                transparent 54px,
+                #e0d7d1 55px,
+                #e0d7d1 56px
+            );
+            background-position: 0 10px;
+            background-attachment: local;
+        }
 
-    .card-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #5a5a5a;
-      letter-spacing: 1px;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      padding-bottom: 12px;
-      border-bottom: 2px solid #f2c94c;
-    }
+        .notebook textarea::placeholder {
+            color: #a1887f;
+            font-style: italic;
+        }
 
-    /* =====================
-       ① ノートスペース（左上）
-    ===================== */
-    .note-card {
-      grid-column: 1;
-      grid-row: 1;
-      display: flex;
-      flex-direction: column;
-      background: linear-gradient(to right, #fffbf7 0%, #fffef8 40%, #fffef8 100%);
-      background-image:
-        linear-gradient(to right, #ff9999 0px, #ff9999 3px, transparent 3px),
-        repeating-linear-gradient(
-          transparent,
-          transparent 31px,
-          #e0ddd0 31px,
-          #e0ddd0 32px
-        );
-      background-position: 0 48px, 0 48px;
-      background-size: 100% 100%, 100% 100%;
-      padding-left: 32px;
-    }
+        .notebook textarea:focus {
+            outline: none;
+        }
 
-    .note-textarea {
-      flex: 1;
-      width: 100%;
-      border: none;
-      outline: none;
-      background: transparent;
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      font-size: 14px;
-      line-height: 32px;
-      color: #3d3d3d;
-      resize: none;
-      padding: 0 12px 0 16px;
-      cursor: text;
-    }
+        /* 教材スペース - 豪華な額縁 */
+        .textbook {
+            grid-area: textbook;
+            border-radius: 15px;
+            padding: 0;
+            position: relative;
+            min-height: 550px;
+            overflow: hidden;
+            box-shadow: 
+                0 20px 50px rgba(212,175,55,0.3),
+                0 10px 30px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.4),
+                inset 0 -1px 0 rgba(0,0,0,0.2);
+        }
 
-    /* =====================
-       右側コンテナ
-    ===================== */
-    .right-column {
-      grid-column: 2;
-      grid-row: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-    }
+        .textbook::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 25%, #ffd700 50%, #ffb300 75%, #ffd700 100%);
+            border-radius: 15px;
+            padding: 8px;
+            z-index: 1;
+        }
 
-    /* =====================
-       ② 教材閲覧スペース（右上）
-    ===================== */
-    .material-card {
-      flex: 1;
-      padding: 6px;
-      background: linear-gradient(135deg, #3d2817 0%, #2a1810 50%, #3d2817 100%);
-      border-radius: 12px;
-      position: relative;
-      box-shadow:
-        0 8px 28px rgba(0, 0, 0, 0.2),
-        inset 0 0 0 2px #8b6914,
-        inset 0 0 0 4px #d4af37,
-        inset 0 0 0 5px #8b6914,
-        inset 0 0 0 8px #e8c547,
-        inset 0 0 0 9px #8b6914,
-        inset 0 0 0 12px #d4af37;
-      display: flex;
-      flex-direction: column;
-    }
+        .textbook::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            background: linear-gradient(135deg, #fffaf0 0%, #fff8f0 100%);
+            border-radius: 10px;
+            z-index: 2;
+        }
 
-    .material-label {
-      position: absolute;
-      top: -14px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: linear-gradient(135deg, #c9940a, #e8c547, #c9940a);
-      color: #2a1810;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      padding: 4px 20px;
-      border-radius: 14px;
-      white-space: nowrap;
-      z-index: 10;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
+        .textbook-content {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 20px;
+        }
 
-    .material-controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 8px;
-    }
+        .textbook h2 {
+            color: #b8860b;
+            font-size: 18px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .material-url-input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #d4af37;
-      border-radius: 6px;
-      font-size: 12px;
-      font-family: 'Inter', monospace;
-    }
+        .textbook-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
 
-    .material-url-input:focus {
-      outline: none;
-      border-color: #e8c547;
-      box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.2);
-    }
+        .textbook-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 8px rgba(212,175,55,0.4);
+        }
 
-    .material-open-btn {
-      padding: 8px 16px;
-      background: linear-gradient(135deg, #d4af37, #e8c547);
-      border: none;
-      border-radius: 6px;
-      color: #2a1810;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
+        .textbook iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
 
-    .material-open-btn:hover {
-      transform: translateY(-2px);
-    }
+        /* ポモドーロタイマー - マスカット */
+        .pomodoro {
+            grid-area: pomodoro;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+            text-align: center;
+            border: 1px solid #d1f2eb;
+            height: fit-content;
+            margin-left: auto;
+            width: 100%;
+            max-width: 320px;
+        }
 
-    .material-iframe-wrapper {
-      flex: 1;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #f5f0e8;
-    }
+        .pomodoro h2 {
+            color: #2d5f3f;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
 
-    .material-iframe-wrapper iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: block;
-    }
+        .grape-container {
+            position: relative;
+            width: 200px;
+            height: 220px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    .iframe-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #f5f0e8, #ede8de);
-      color: #a89070;
-      font-size: 13px;
-      text-align: center;
-      gap: 12px;
-      border-radius: 4px;
-    }
+        .grape {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #86de54 0%, #66bb6a 40%, #4fa559 100%);
+            box-shadow: 
+                inset -2px -2px 4px rgba(0,0,0,0.2),
+                0 8px 16px rgba(0,0,0,0.15),
+                inset 2px 2px 4px rgba(255,255,255,0.3);
+        }
 
-    .iframe-placeholder .icon {
-      font-size: 44px;
-      opacity: 0.5;
-    }
+        .grape:nth-child(1) { width: 35px; height: 35px; top: 10px; left: 80px; }
+        .grape:nth-child(2) { width: 38px; height: 38px; top: 25px; left: 50px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(3) { width: 40px; height: 40px; top: 25px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(4) { width: 38px; height: 38px; top: 55px; left: 30px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(5) { width: 42px; height: 42px; top: 60px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 12px 22px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(6) { width: 38px; height: 38px; top: 60px; left: 140px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(7) { width: 36px; height: 36px; top: 95px; left: 55px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 9px 16px rgba(0,0,0,0.16), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(8) { width: 40px; height: 40px; top: 95px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(9) { width: 34px; height: 34px; top: 130px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 8px 14px rgba(0,0,0,0.14), inset 2px 2px 4px rgba(255,255,255,0.3); }
+        .grape:nth-child(10) { width: 32px; height: 32px; top: 165px; left: 85px; }
 
-    /* =====================
-       ③ タスクスペース（左下）
-    ===================== */
-    .task-card {
-      grid-column: 1;
-      grid-row: 2;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
+        .time-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 42px;
+            font-weight: 800;
+            color: #1b5e20;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
 
-    .task-section {
-      background: #ffffff;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      border: 1px solid rgba(242, 201, 76, 0.1);
-    }
+        .pomodoro-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
 
-    .task-section:nth-child(2) {
-      grid-column: 1 / 3;
-    }
+        .btn {
+            padding: 11px 22px;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
 
-    .task-section-title {
-      font-size: 12px;
-      font-weight: 700;
-      color: #5a5a5a;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-      text-transform: uppercase;
-      padding-bottom: 8px;
-      border-bottom: 2px solid #f2c94c;
-    }
+        .btn-start {
+            background: linear-gradient(135deg, #52c41a, #389e0d);
+            color: white;
+        }
 
-    .goal-list, .todo-list, .schedule-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(82,196,26,0.35);
+        }
 
-    .goal-item, .todo-item, .schedule-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      font-size: 13px;
-      color: #3d3d3d;
-    }
+        .btn-reset {
+            background: linear-gradient(135deg, #fa8c16, #d48806);
+            color: white;
+        }
 
-    .goal-item input[type="checkbox"],
-    .todo-item input[type="checkbox"],
-    .schedule-item input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      margin-top: 2px;
-      cursor: pointer;
-      accent-color: #f2c94c;
-      flex-shrink: 0;
-    }
+        .btn-reset:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(250,140,22,0.35);
+        }
 
-    .goal-label, .todo-label, .schedule-label {
-      flex: 1;
-      word-break: break-word;
-    }
+        /* 作業計画 */
+        .plan {
+            grid-area: plan;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 12px 35px rgba(0,0,0,0.1);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            border: 1px solid #e8e8e8;
+            margin-right: auto;
+            width: 80%;
+            margin-left: 0;
+        }
 
-    .todo-delete-btn {
-      background: none;
-      border: none;
-      color: #d9534f;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 0;
-      flex-shrink: 0;
-      transition: transform 0.2s;
-    }
+        .plan-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            border-left: 4px solid #4299e1;
+            transition: all 0.3s ease;
+        }
 
-    .todo-delete-btn:hover {
-      transform: scale(1.2);
-    }
+        .plan-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(66,153,225,0.15);
+        }
 
-    .todo-input-group {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
+        .plan-section h3 {
+            color: #2d3748;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
 
-    .todo-input-group input {
-      flex: 1;
-      padding: 8px 12px;
-      border: 1px solid #e0ddd0;
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-    }
+        .plan-section textarea {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            resize: none;
+            font-family: inherit;
+            background: #f7fafc;
+        }
 
-    .todo-input-group input:focus {
-      outline: none;
-      border-color: #f2c94c;
-      box-shadow: 0 0 0 2px rgba(242, 201, 76, 0.2);
-    }
+        .plan-section textarea:focus {
+            outline: none;
+            border-color: #4299e1;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(66,153,225,0.1);
+        }
 
-    .todo-add-btn {
-      padding: 8px 16px;
-      background: #f2c94c;
-      border: none;
-      border-radius: 8px;
-      color: #3d3d3d;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      transition: transform 0.2s, background 0.2s;
-    }
+        /* ドラッグハンドル */
+        .drag-handle {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            width: 26px;
+            height: 26px;
+            background: rgba(0,0,0,0.08);
+            border-radius: 50%;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            user-select: none;
+            transition: background 0.3s ease;
+        }
 
-    .todo-add-btn:hover {
-      background: #e6b837;
-      transform: translateY(-2px);
-    }
+        .drag-handle:hover {
+            background: rgba(0,0,0,0.12);
+        }
 
-    .schedule-input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #e0ddd0;
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-      margin-top: 8px;
-      min-height: 60px;
-      resize: vertical;
-    }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
 
-    .schedule-input:focus {
-      outline: none;
-      border-color: #f2c94c;
-      box-shadow: 0 0 0 2px rgba(242, 201, 76, 0.2);
-    }
+        .drag-handle::before {
+            content: '⋮';
+            font-weight: bold;
+            color: #666;
+        }
 
-    /* =====================
-       ④ ポモドーロタイマー（右下）
-    ===================== */
-    .timer-card {
-      grid-column: 2;
-      grid-row: 2;
-      background: linear-gradient(135deg, #f0faf6, #e8f5f1);
-      border: 1px solid rgba(90, 200, 120, 0.2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 24px;
-      flex-shrink: 0;
-      border-radius: 20px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      min-height: 280px;
-    }
+        /* レスポンシブ対応 */
+        @media (max-width: 1400px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "notebook"
+                    "textbook"
+                    "plan"
+                    "pomodoro";
+            }
 
-    .muscat-wrap {
-      position: relative;
-      width: 140px;
-      height: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+            .pomodoro {
+                max-width: 100%;
+                width: 100%;
+            }
 
-    .muscat-stem {
-      position: absolute;
-      width: 4px;
-      height: 24px;
-      background: linear-gradient(to bottom, #6b8c3a, #52692d);
-      top: -8px;
-      border-radius: 2px;
-    }
-
-    .muscat-leaf {
-      position: absolute;
-      width: 28px;
-      height: 24px;
-      background: linear-gradient(135deg, #7ba84a, #5a8638);
-      border-radius: 50% 0 50% 0;
-      top: -12px;
-      left: -18px;
-      transform: rotate(-30deg);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-    }
-
-    .muscat-grape {
-      position: absolute;
-      border-radius: 50%;
-      background: radial-gradient(circle at 32% 32%, #9ee674, #68c237);
-      box-shadow:
-        inset -3px -3px 6px rgba(0, 0, 0, 0.18),
-        0 4px 10px rgba(0, 0, 0, 0.15);
-    }
-
-    .grape-1 { width: 28px; height: 28px; top: 0px; left: 56px; }
-    .grape-2 { width: 32px; height: 32px; top: 24px; left: 40px; }
-    .grape-3 { width: 32px; height: 32px; top: 24px; left: 72px; }
-    .grape-4 { width: 36px; height: 36px; top: 52px; left: 28px; }
-    .grape-5 { width: 36px; height: 36px; top: 52px; left: 76px; }
-    .grape-6 { width: 32px; height: 32px; top: 84px; left: 20px; }
-    .grape-7 { width: 32px; height: 32px; top: 84px; left: 88px; }
-    .grape-8 { width: 28px; height: 28px; top: 112px; left: 56px; }
-
-    .timer-display-overlay {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 52px;
-      font-weight: 700;
-      color: #2d5a1a;
-      font-family: 'Courier New', monospace;
-      letter-spacing: 2px;
-      text-shadow:
-        2px 2px 4px rgba(255, 255, 255, 0.9),
-        -1px -1px 2px rgba(0, 0, 0, 0.1);
-      z-index: 10;
-    }
-
-    .timer-label {
-      font-size: 12px;
-      color: #5a8c4a;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .timer-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      width: 100%;
-    }
-
-    .timer-btn {
-      padding: 10px 14px;
-      border: none;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      font-family: 'Inter', 'Noto Sans JP', sans-serif;
-    }
-
-    .timer-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .timer-btn:active {
-      transform: translateY(0);
-    }
-
-    .btn-start {
-      background: linear-gradient(135deg, #68c237, #52a030);
-      color: white;
-    }
-
-    .btn-break {
-      background: linear-gradient(135deg, #f2c94c, #e6b837);
-      color: #3d3d3d;
-    }
-
-    .btn-reset {
-      background: linear-gradient(135deg, #e74c3c, #c0392b);
-      color: white;
-    }
-
-    .btn-set {
-      background: linear-gradient(135deg, #3498db, #2980b9);
-      color: white;
-    }
-
-    @media (max-width: 1200px) {
-      .main-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .task-card {
-        grid-column: 1 / 3;
-        grid-template-columns: 1fr 1fr 1fr;
-      }
-
-      .task-section:nth-child(2) {
-        grid-column: 1 / 4;
-      }
-    }
-
-  </style>
+            .plan {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="workspace" id="workspace">
+        <!-- ノートエリア -->
+        <div class="notebook" draggable="true">
+            <div class="drag-handle"></div>
+            <h2>📝 ノート</h2>
+            <textarea placeholder="ここにメモを記入...&#10;・重要なポイント&#10;・気づき&#10;・次のアクション"></textarea>
+        </div>
 
-  <h1 class="page-title">📚 Study Dashboard</h1>
+        <!-- 教材スペース -->
+        <div class="textbook" draggable="true">
+            <div class="textbook-content">
+                <h2>📚 教材スペース</h2>
+                <input type="url" class="textbook-input" placeholder="教材URLを入力 (例: YouTube, PDFなど)" value="https://www.youtube.com/embed/dQw4w9WgXcQ">
+                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+            </div>
+        </div>
 
-  <div class="main-grid">
+        <!-- ポモドーロタイマー -->
+        <div class="pomodoro" draggable="true">
+            <h2>⏱️ ポモドーロ</h2>
+            <div class="grape-container">
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="grape"></div>
+                <div class="time-display" id="timer">25:00</div>
+            </div>
+            <div class="pomodoro-controls">
+                <button class="btn btn-start" id="startBtn">▶️ Start</button>
+                <button class="btn btn-reset" id="resetBtn">🔄 Reset</button>
+            </div>
+        </div>
 
-    <!-- ① ノートスペース（左上） -->
-    <div class="card note-card" id="noteCard">
-      <div class="card-title">📓 Notes</div>
-      <textarea
-        class="note-textarea"
-        id="noteTextarea"
-        placeholder="ここに学習内容をメモしてください..."
-      ></textarea>
+        <!-- 作業計画 -->
+        <div class="plan" draggable="true">
+            <div class="plan-section">
+                <h3>🎯 今日の目標</h3>
+                <textarea placeholder="今日の3つの最重要タスク&#10;&#10;1. &#10;2. &#10;3. "></textarea>
+            </div>
+            <div class="plan-section">
+                <h3>📋 目次</h3>
+                <textarea placeholder="学習内容のチェックリスト&#10;&#10;□ 導入&#10;□ 基本概念&#10;□ 演習"></textarea>
+            </div>
+            <div class="plan-section">
+                <h3>⏰ 時間割</h3>
+                <textarea placeholder="今日のスケジュール&#10;09:00-10:00 学習1&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩"></textarea>
+            </div>
+        </div>
     </div>
 
-    <!-- 右側コンテナ -->
-    <div class="right-column">
+    <script>
+        const draggables = document.querySelectorAll('[draggable="true"]');
+        
+        draggables.forEach(draggable => {
+            draggable.addEventListener('dragstart', (e) => {
+                e.dataTransfer.effectAllowed = 'move';
+                draggable.style.opacity = '0.5';
+            });
+            
+            draggable.addEventListener('dragend', (e) => {
+                draggable.style.opacity = '1';
+            });
+        });
 
-      <!-- ② 教材閲覧スペース（右上） -->
-      <div class="card material-card" id="materialCard">
-        <span class="material-label">📖 Learning Viewer</span>
-        <div class="material-controls">
-          <input
-            type="text"
-            class="material-url-input"
-            id="materialUrl"
-            placeholder="https://example.com"
-          />
-          <button class="material-open-btn" onclick="loadMaterial()">開く</button>
-        </div>
-        <div class="material-iframe-wrapper">
-          <div class="iframe-placeholder" id="iframePlaceholder">
-            <div class="icon">🖼️</div>
-            <p>URLを入力して「開く」をクリック</p>
-          </div>
-          <iframe id="materialIframe" style="display:none;"></iframe>
-        </div>
-      </div>
+        const workspace = document.getElementById('workspace');
+        workspace.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
 
-      <!-- ④ ポモドーロタイマー（右下） -->
-      <div class="card timer-card" id="timerCard">
-        <div class="muscat-wrap">
-          <div class="muscat-stem"></div>
-          <div class="muscat-leaf"></div>
-          <div class="muscat-grape grape-1"></div>
-          <div class="muscat-grape grape-2"></div>
-          <div class="muscat-grape grape-3"></div>
-          <div class="muscat-grape grape-4"></div>
-          <div class="muscat-grape grape-5"></div>
-          <div class="muscat-grape grape-6"></div>
-          <div class="muscat-grape grape-7"></div>
-          <div class="muscat-grape grape-8"></div>
-          <div class="timer-display-overlay" id="timerDisplay">25:00</div>
-        </div>
-        <div class="timer-label">🍇 Pomodoro Timer</div>
-        <div class="timer-buttons">
-          <button class="timer-btn btn-start" onclick="startTimer()">▶ Start</button>
-          <button class="timer-btn btn-break" onclick="startBreak()">☕ Break</button>
-          <button class="timer-btn btn-reset" onclick="resetTimer()">↺ Reset</button>
-          <button class="timer-btn btn-set" onclick="setTime()">⚙ Set</button>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ③ タスクスペース（左下） -->
-    <div class="task-card" id="taskCard">
-
-      <!-- 今日の目標 -->
-      <div class="task-section">
-        <div class="task-section-title">🎯 Goals</div>
-        <ul class="goal-list" id="goalList">
-          <li class="goal-item">
-            <input type="checkbox" class="goal-check" />
-            <span class="goal-label">宿題を終わらせる</span>
-          </li>
-          <li class="goal-item">
-            <input type="checkbox" class="goal-check" />
-            <span class="goal-label">ノート復習</span>
-          </li>
-          <li class="goal-item">
-            <input type="checkbox" class="goal-check" />
-            <span class="goal-label">問題演習</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- スケジュール -->
-      <div class="task-section">
-        <div class="task-section-title">🕐 Schedule</div>
-        <textarea
-          class="schedule-input"
-          id="scheduleText"
-          placeholder="例:&#10;10:00 - 数学の勉強&#10;11:00 - 休憩&#10;11:30 - 英語の問題"
-        ></textarea>
-      </div>
-
-      <!-- To-Doリスト -->
-      <div class="task-section" style="grid-column: 1 / 3;">
-        <div class="task-section-title">✓ To-Do List</div>
-        <ul class="todo-list" id="todoList"></ul>
-        <div class="todo-input-group">
-          <input
-            type="text"
-            id="todoInput"
-            placeholder="新しいタスクを入力..."
-            onkeypress="if(event.key==='Enter') addTodo()"
-          />
-          <button class="todo-add-btn" onclick="addTodo()">追加</button>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-
-  <script>
-
-    /* =====================
-       LocalStorage管理
-    ===================== */
-    function saveToLocalStorage(key, value) {
-      localStorage.setItem(key, JSON.stringify(value));
-    }
-
-    function getFromLocalStorage(key, defaultValue) {
-      const stored = localStorage.getItem(key);
-      return stored ? JSON.parse(stored) : defaultValue;
-    }
-
-    /* =====================
-       ノート機能
-    ===================== */
-    const noteTextarea = document.getElementById('noteTextarea');
-    noteTextarea.value = getFromLocalStorage('notes', '');
-
-    noteTextarea.addEventListener('input', () => {
-      saveToLocalStorage('notes', noteTextarea.value);
-    });
-
-    /* =====================
-       教材機能
-    ===================== */
-    function loadMaterial() {
-      const url = document.getElementById('materialUrl').value;
-      if (!url) {
-        alert('URLを入力してください');
-        return;
-      }
-
-      const iframe = document.getElementById('materialIframe');
-      const placeholder = document.getElementById('iframePlaceholder');
-
-      iframe.src = url;
-      iframe.style.display = 'block';
-      placeholder.style.display = 'none';
-
-      saveToLocalStorage('materialUrl', url);
-    }
-
-    window.addEventListener('load', () => {
-      const savedUrl = getFromLocalStorage('materialUrl', '');
-      if (savedUrl) {
-        document.getElementById('materialUrl').value = savedUrl;
-        loadMaterial();
-      }
-    });
-
-    /* =====================
-       タスク機能
-    ===================== */
-    let goals = getFromLocalStorage('goals', [
-      { text: '宿題を終わらせる', completed: false },
-      { text: 'ノート復習', completed: false },
-      { text: '問題演習', completed: false }
-    ]);
-
-    let todos = getFromLocalStorage('todos', []);
-
-    function renderGoals() {
-      const goalList = document.getElementById('goalList');
-      goalList.innerHTML = goals.map((goal, index) => `
-        <li class="goal-item">
-          <input type="checkbox" class="goal-check" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})" />
-          <span class="goal-label">${goal.text}</span>
-        </li>
-      `).join('');
-    }
-
-    function toggleGoal(index) {
-      goals[index].completed = !goals[index].completed;
-      saveToLocalStorage('goals', goals);
-      renderGoals();
-    }
-
-    function renderTodos() {
-      const todoList = document.getElementById('todoList');
-      todoList.innerHTML = todos.map((todo, index) => `
-        <li class="todo-item">
-          <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})" />
-          <span class="todo-label" style="${todo.completed ? 'text-decoration: line-through; color: #a0a0a0;' : ''}">${todo.text}</span>
-          <button class="todo-delete-btn" onclick="deleteTodo(${index})">🗑</button>
-        </li>
-      `).join('');
-    }
-
-    function toggleTodo(index) {
-      todos[index].completed = !todos[index].completed;
-      saveToLocalStorage('todos', todos);
-      renderTodos();
-    }
-
-    function addTodo() {
-      const input = document.getElementById('todoInput');
-      const text = input.value.trim();
-      if (!text) return;
-
-      todos.push({ text, completed: false });
-      saveToLocalStorage('todos', todos);
-      renderTodos();
-      input.value = '';
-    }
-
-    function deleteTodo(index) {
-      todos.splice(index, 1);
-      saveToLocalStorage('todos', todos);
-      renderTodos();
-    }
-
-    const scheduleText = document.getElementById('scheduleText');
-    scheduleText.value = getFromLocalStorage('schedule', '');
-
-    scheduleText.addEventListener('input', () => {
-      saveToLocalStorage('schedule', scheduleText.value);
-    });
-
-    renderGoals();
-    renderTodos();
-
-    /* =====================
-       ポモドーロタイマー機能
-    ===================== */
-    let timerInterval = null;
-    let timeLeft = 1500; // 25分（秒単位）
-    let isRunning = false;
-
-    function updateTimerDisplay() {
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
-      document.getElementById('timerDisplay').textContent =
-        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
-    function startTimer() {
-      if (isRunning) return;
-      isRunning = true;
-
-      timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          updateTimerDisplay();
-        } else {
-          clearInterval(timerInterval);
-          isRunning = false;
-          alert('ポモドーロ完了！休憩しましょう');
-        }
-      }, 1000);
-    }
-
-    function startBreak() {
-      if (isRunning) clearInterval(timerInterval);
-      isRunning = false;
-      timeLeft = 300; // 5分
-      updateTimerDisplay();
-
-      isRunning = true;
-      timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          timeLeft--;
-          updateTimerDisplay();
-        } else {
-          clearInterval(timerInterval);
-          isRunning = false;
-          alert('休憩時間終了！');
-        }
-      }, 1000);
-    }
-
-    function resetTimer() {
-      if (isRunning) clearInterval(timerInterval);
-      isRunning = false;
-      timeLeft = 1500;
-      updateTimerDisplay();
-    }
-
-    function setTime() {
-      const minutes = prompt('分数を入力してください:', '25');
-      if (minutes && !isNaN(minutes)) {
-        if (isRunning) clearInterval(timerInterval);
-        isRunning = false;
-        timeLeft = parseInt(minutes) * 60;
-        updateTimerDisplay();
-      }
-    }
-
-    updateTimerDisplay();
-
-  </script>
-
+        workspace.addEventListener('drop', (e) => {
+            e.preventDefault();
+        });
+    </script>
 </body>
 </html>
