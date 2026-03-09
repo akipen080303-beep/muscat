@@ -1,498 +1,107 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>集中作業環境</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* 背景装飾 */
-        body::before {
-            content: '📚';
-            position: fixed;
-            top: 5%;
-            left: 2%;
-            font-size: 80px;
-            opacity: 0.08;
-            z-index: -1;
-        }
-
-        body::after {
-            content: '✏️';
-            position: fixed;
-            bottom: 15%;
-            right: 3%;
-            font-size: 60px;
-            opacity: 0.1;
-            z-index: -1;
-            transform: rotate(-45deg);
-        }
-
-        .workspace {
-            max-width: 1600px;
-            margin: 30px auto;
-            padding: 30px;
-            display: grid;
-            grid-template-areas: 
-                "notebook textbook"
-                "plan pomodoro";
-            grid-template-columns: 1.2fr 1fr;
-            grid-template-rows: auto auto;
-            gap: 25px;
-            min-height: 100vh;
-        }
-
-        /* ノートエリア - 縦長 */
-        .notebook {
-            grid-area: notebook;
-            background: linear-gradient(135deg, #fef9f3 0%, #fdfbf7 100%);
-            border-radius: 18px;
-            padding: 30px;
-            box-shadow: 0 15px 45px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6);
-            position: relative;
-            border: 1px solid #f0e6d8;
-            min-height: 550px;
-        }
-
-        .notebook::before {
-            content: '';
-            position: absolute;
-            left: 25px;
-            top: 30px;
-            bottom: 30px;
-            width: 3px;
-            background: linear-gradient(180deg, #d32f2f 0%, #ff6b6b 100%);
-            border-radius: 2px;
-        }
-
-        .notebook h2 {
-            color: #5d4037;
-            font-size: 18px;
-            margin-bottom: 20px;
-            margin-left: 20px;
-            font-weight: 700;
-            border-bottom: 2px solid #d7ccc8;
-            padding-bottom: 10px;
-        }
-
-        .notebook textarea {
-            width: 100%;
-            height: 450px;
-            border: none;
-            background: transparent;
-            font-size: 15px;
-            line-height: 2.2;
-            resize: none;
-            font-family: 'Georgia', serif;
-            color: #3e2723;
-            padding: 20px;
-            outline: none;
-            position: relative;
-            background-image: repeating-linear-gradient(
-                180deg,
-                transparent 0px,
-                transparent 54px,
-                #e0d7d1 55px,
-                #e0d7d1 56px
-            );
-            background-position: 0 10px;
-            background-attachment: local;
-        }
-
-        .notebook textarea::placeholder {
-            color: #a1887f;
-            font-style: italic;
-        }
-
-        .notebook textarea:focus {
-            outline: none;
-        }
-
-        /* 教材スペース - 豪華な額縁 */
-        .textbook {
-            grid-area: textbook;
-            border-radius: 15px;
-            padding: 0;
-            position: relative;
-            min-height: 550px;
-            overflow: hidden;
-            box-shadow: 
-                0 20px 50px rgba(212,175,55,0.3),
-                0 10px 30px rgba(0,0,0,0.15),
-                inset 0 1px 0 rgba(255,255,255,0.4),
-                inset 0 -1px 0 rgba(0,0,0,0.2);
-        }
-
-        .textbook::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4a 25%, #ffd700 50%, #ffb300 75%, #ffd700 100%);
-            border-radius: 15px;
-            padding: 8px;
-            z-index: 1;
-        }
-
-        .textbook::after {
-            content: '';
-            position: absolute;
-            inset: 8px;
-            background: linear-gradient(135deg, #fffaf0 0%, #fff8f0 100%);
-            border-radius: 10px;
-            z-index: 2;
-        }
-
-        .textbook-content {
-            position: relative;
-            z-index: 3;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            padding: 20px;
-        }
-
-        .textbook h2 {
-            color: #b8860b;
-            font-size: 18px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .textbook-input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #d4af37;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 14px;
-            background: rgba(255,255,255,0.9);
-            color: #333;
-        }
-
-        .textbook-input:focus {
-            outline: none;
-            border-color: #ffd700;
-            box-shadow: 0 0 8px rgba(212,175,55,0.4);
-        }
-
-        .textbook iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 8px;
-            background: #f8f9fa;
-        }
-
-        /* ポモドーロタイマー - マスカット */
-        .pomodoro {
-            grid-area: pomodoro;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e8f5e9 100%);
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.12);
-            text-align: center;
-            border: 1px solid #d1f2eb;
-            height: fit-content;
-            margin-left: auto;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .pomodoro h2 {
-            color: #2d5f3f;
-            font-size: 18px;
-            margin-bottom: 20px;
-            font-weight: 700;
-        }
-
-        .grape-container {
-            position: relative;
-            width: 200px;
-            height: 220px;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .grape {
-            position: absolute;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #86de54 0%, #66bb6a 40%, #4fa559 100%);
-            box-shadow: 
-                inset -2px -2px 4px rgba(0,0,0,0.2),
-                0 8px 16px rgba(0,0,0,0.15),
-                inset 2px 2px 4px rgba(255,255,255,0.3);
-        }
-
-        .grape:nth-child(1) { width: 35px; height: 35px; top: 10px; left: 80px; }
-        .grape:nth-child(2) { width: 38px; height: 38px; top: 25px; left: 50px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(3) { width: 40px; height: 40px; top: 25px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(4) { width: 38px; height: 38px; top: 55px; left: 30px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(5) { width: 42px; height: 42px; top: 60px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 12px 22px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(6) { width: 38px; height: 38px; top: 60px; left: 140px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(7) { width: 36px; height: 36px; top: 95px; left: 55px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 9px 16px rgba(0,0,0,0.16), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(8) { width: 40px; height: 40px; top: 95px; left: 115px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 10px 18px rgba(0,0,0,0.18), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(9) { width: 34px; height: 34px; top: 130px; left: 85px; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 0 8px 14px rgba(0,0,0,0.14), inset 2px 2px 4px rgba(255,255,255,0.3); }
-        .grape:nth-child(10) { width: 32px; height: 32px; top: 165px; left: 85px; }
-
-        .time-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 42px;
-            font-weight: 800;
-            color: #1b5e20;
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 10;
-        }
-
-        .pomodoro-controls {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .btn {
-            padding: 11px 22px;
-            border: none;
-            border-radius: 25px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
-        }
-
-        .btn-start {
-            background: linear-gradient(135deg, #52c41a, #389e0d);
-            color: white;
-        }
-
-        .btn-start:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(82,196,26,0.35);
-        }
-
-        .btn-reset {
-            background: linear-gradient(135deg, #fa8c16, #d48806);
-            color: white;
-        }
-
-        .btn-reset:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 24px rgba(250,140,22,0.35);
-        }
-
-        /* 作業計画 */
-        .plan {
-            grid-area: plan;
-            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 12px 35px rgba(0,0,0,0.1);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            border: 1px solid #e8e8e8;
-            margin-right: auto;
-            width: 80%;
-            margin-left: 0;
-        }
-
-        .plan-section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-            border-left: 4px solid #4299e1;
-            transition: all 0.3s ease;
-        }
-
-        .plan-section:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(66,153,225,0.15);
-        }
-
-        .plan-section h3 {
-            color: #2d3748;
-            font-size: 16px;
-            margin-bottom: 15px;
-            font-weight: 700;
-        }
-
-        .plan-section textarea {
-            width: 100%;
-            height: 120px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            resize: none;
-            font-family: inherit;
-            background: #f7fafc;
-        }
-
-        .plan-section textarea:focus {
-            outline: none;
-            border-color: #4299e1;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(66,153,225,0.1);
-        }
-
-        /* ドラッグハンドル */
-        .drag-handle {
-            position: absolute;
-            top: 12px;
-            right: 15px;
-            width: 26px;
-            height: 26px;
-            background: rgba(0,0,0,0.08);
-            border-radius: 50%;
-            cursor: grab;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            user-select: none;
-            transition: background 0.3s ease;
-        }
-
-        .drag-handle:hover {
-            background: rgba(0,0,0,0.12);
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .drag-handle::before {
-            content: '⋮';
-            font-weight: bold;
-            color: #666;
-        }
-
-        /* レスポンシブ対応 */
-        @media (max-width: 1400px) {
-            .workspace {
-                grid-template-columns: 1fr;
-                grid-template-areas: 
-                    "notebook"
-                    "textbook"
-                    "plan"
-                    "pomodoro";
-            }
-
-            .pomodoro {
-                max-width: 100%;
-                width: 100%;
-            }
-
-            .plan {
-                width: 100%;
-                margin-left: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="workspace" id="workspace">
-        <!-- ノートエリア -->
-        <div class="notebook" draggable="true">
-            <div class="drag-handle"></div>
-            <h2>📝 ノート</h2>
-            <textarea placeholder="ここにメモを記入...&#10;・重要なポイント&#10;・気づき&#10;・次のアクション"></textarea>
-        </div>
-
-        <!-- 教材スペース -->
-        <div class="textbook" draggable="true">
-            <div class="textbook-content">
-                <h2>📚 教材スペース</h2>
-                <input type="url" class="textbook-input" placeholder="教材URLを入力 (例: YouTube, PDFなど)" value="https://www.youtube.com/embed/dQw4w9WgXcQ">
-                <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
-            </div>
-        </div>
-
-        <!-- ポモドーロタイマー -->
-        <div class="pomodoro" draggable="true">
-            <h2>⏱️ ポモドーロ</h2>
-            <div class="grape-container">
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="grape"></div>
-                <div class="time-display" id="timer">25:00</div>
-            </div>
-            <div class="pomodoro-controls">
-                <button class="btn btn-start" id="startBtn">▶️ Start</button>
-                <button class="btn btn-reset" id="resetBtn">🔄 Reset</button>
-            </div>
-        </div>
-
-        <!-- 作業計画 -->
-        <div class="plan" draggable="true">
-            <div class="plan-section">
-                <h3>🎯 今日の目標</h3>
-                <textarea placeholder="今日の3つの最重要タスク&#10;&#10;1. &#10;2. &#10;3. "></textarea>
-            </div>
-            <div class="plan-section">
-                <h3>📋 目次</h3>
-                <textarea placeholder="学習内容のチェックリスト&#10;&#10;□ 導入&#10;□ 基本概念&#10;□ 演習"></textarea>
-            </div>
-            <div class="plan-section">
-                <h3>⏰ 時間割</h3>
-                <textarea placeholder="今日のスケジュール&#10;09:00-10:00 学習1&#10;10:00-10:25 ポモドーロ&#10;10:25-10:30 休憩"></textarea>
-            </div>
-        </div>
+    <div class="note-paper-area" role="region" aria-label="ノートエリア">
+      <div class="note-head">Notes</div>
+      <textarea class="note-textarea" placeholder="ここにメモを書きます..." aria-label="ノート入力"></textarea>
     </div>
 
-    <script>
-        const draggables = document.querySelectorAll('[draggable="true"]');
-        
-        draggables.forEach(draggable => {
-            draggable.addEventListener('dragstart', (e) => {
-                e.dataTransfer.effectAllowed = 'move';
-                draggable.style.opacity = '0.5';
-            });
-            
-            draggable.addEventListener('dragend', (e) => {
-                draggable.style.opacity = '1';
-            });
-        });
+    <div class="drag-hint">drag</div>
+  </section>
 
-        const workspace = document.getElementById('workspace');
-        workspace.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        });
+  <!-- Frame (right-top) -->
+  <section class="frame-card card-like" aria-label="教材スペース">
+    <div class="gold-frame">
+      <div class="frame-title">教材スペース</div>
+      <div class="iframe-shell" role="region" aria-label="教材表示">
+        <iframe src="about:blank" title="教材表示エリア"></iframe>
+      </div>
+    </div>
+    <div class="drag-hint">drag</div>
+  </section>
 
-        workspace.addEventListener('drop', (e) => {
-            e.preventDefault();
-        });
-    </script>
-</body>
-</html>
+  <!-- Plan (left-bottom) -->
+  <section class="plan-card card-like" aria-label="作業計画スペース">
+    <div class="drag-hint">drag</div>
+    <div class="plan-top">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:18px;height:36px;background:#e88c72;border-radius:6px;box-shadow:inset 0 -4px 0 rgba(0,0,0,0.08)"></div>
+        <div class="plan-title">Today's Tasks ✎</div>
+      </div>
+      <div class="plan-line" aria-hidden="true"></div>
+    </div>
+
+    <div class="plan-grid">
+      <div class="plan-section goals">
+        <h3>Goals for Today</h3>
+        <div class="plan-content">
+          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.9">
+            <li>□ 英単語を50個復習する</li>
+            <li>□ 数学の問題集を2章進める</li>
+            <li>□ 授業ノートを整理する</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="plan-section todo">
+        <h3>To-Do List</h3>
+        <div class="plan-content">
+          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.9">
+            <li>□ Quiz Review</li>
+            <li>□ Read Article</li>
+            <li>□ Flashcards</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="plan-section schedule">
+        <h3>Schedule</h3>
+        <div class="plan-content">
+          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.8">
+            <li><strong style="width:64px;display:inline-block;color:#6c5845">10:00</strong> Study</li>
+            <li><strong style="width:64px;display:inline-block;color:#6c5845">11:00</strong> Break</li>
+            <li><strong style="width:64px;display:inline-block;color:#6c5845">11:30</strong> Review</li>
+            <li><strong style="width:64px;display:inline-block;color:#6c5845">13:00</strong> Practice</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;bottom:14px;left:18px;font-size:24px;opacity:0.9">🍎</div>
+    <div style="position:absolute;bottom:14px;right:18px;width:94px;height:10px;border-radius:999px;background:linear-gradient(90deg,#6eaa49 0 24%, #f1cd6a 24% 76%, #d9705b 76% 92%, #f8e8cc 92% 100%);transform:rotate(-18deg);opacity:0.9"></div>
+  </section>
+
+  <!-- Timer (right-bottom) - muscat cluster -->
+  <aside class="timer-card card-like" aria-label="ポモドーロタイマー">
+    <div class="drag-hint">drag</div>
+
+    <div class="muscat-wrap" aria-hidden="true">
+      <div class="cluster" role="img" aria-label="マスカットのイラスト">
+        <!-- create multiple grapes arranged in cluster -->
+        <div class="grape" style="transform:scale(1.05) translate(6px, -6px)"></div>
+        <div class="grape" style="transform:scale(1.02) translate(32px, -6px)"></div>
+        <div class="grape" style="transform:scale(0.98) translate(68px, 0px)"></div>
+        <div class="grape" style="transform:scale(1.1) translate(12px, 22px)"></div>
+        <div class="grape" style="transform:scale(0.96) translate(44px, 22px)"></div>
+        <div class="grape" style="transform:scale(0.9) translate(76px, 24px)"></div>
+        <div class="grape" style="transform:scale(0.88) translate(26px, 44px)"></div>
+        <div class="grape" style="transform:scale(0.92) translate(58px, 44px)"></div>
+
+        <div class="vine" aria-hidden="true">
+          <div class="leaf l1"></div>
+          <div class="leaf l2"></div>
+          <div class="leaf l3"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-display" aria-live="polite">25:00</div>
+
+    <div class="timer-controls" aria-hidden="false">
+      <div class="btn-row">
+        <button class="timer-btn start">Start</button>
+        <button class="timer-btn reset">Reset</button>
+      </div>
+      <div class="btn-row">
+        <button class="timer-btn break">Break</button>
+      </div>
+    </div>
+  </aside>
+</main>
