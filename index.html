@@ -1,439 +1,867 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Focus Dashboard - Muscat Edition</title>
-    <style>
-        :root {
-            --bg-color: #f6f1e8;
-            --card-bg: #ffffff;
-            --accent-yellow: #f2c94c;
-            --text-color: #3d3d3d;
-            --muscat-green: #b5e48c;
-            --muscat-dark: #76c893;
-            --gold-gradient: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>集中学習ダッシュボード</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Inter', 'Noto Sans JP', sans-serif;
-            height: 100vh;
-            padding: 40px;
-            overflow: hidden;
-            position: relative;
-        }
+    body {
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      background: linear-gradient(135deg, #f6f1e8 0%, #faf7f0 50%, #f2ede4 100%);
+      min-height: 100vh;
+      padding: 40px;
+      position: relative;
+      overflow-x: hidden;
+      color: #3d3d3d;
+    }
 
-        /* Background Decorations */
-        body::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
-            opacity: 0.15;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 20 L20 10 M80 80 L90 70 M30 70 Q 40 60 50 70 T 70 70' stroke='%233d3d3d' stroke-width='1' fill='none'/%3E%3Ccircle cx='15' cy='85' r='3' fill='%23f2c94c'/%3E%3Crect x='75' y='15' width='10' height='15' fill='%233d3d3d' rx='2'/%3E%3Cpath d='M50 10 L55 20 L45 20 Z' fill='%23f2c94c'/%3E%3C/svg%3E");
-            background-size: 150px 150px;
-        }
+    body::before {
+      content: '📚 ✏️ 📖 🌟 ✒️ 📝 ⭐ 📕 ✍️ 🌟 📗 ✏️ 📚 ⭐ 📓 ✏️ 🌟';
+      position: fixed;
+      top: -40px;
+      left: -150px;
+      font-size: 100px;
+      opacity: 0.06;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(-20deg);
+      z-index: 0;
+      letter-spacing: 20px;
+    }
 
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            grid-template-rows: 1fr 0.7fr;
-            gap: 30px;
-            height: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+    body::after {
+      content: '🌟 ✏️ 📚 📖 ⭐ ✒️ 📝 ✍️ 🌟 📕 📗 ✏️ 🌟 📓 ✏️';
+      position: fixed;
+      bottom: -40px;
+      right: -150px;
+      font-size: 100px;
+      opacity: 0.06;
+      white-space: nowrap;
+      pointer-events: none;
+      transform: rotate(20deg);
+      z-index: 0;
+      letter-spacing: 20px;
+    }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+    .page-title {
+      text-align: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: #5a5a5a;
+      margin-bottom: 32px;
+      position: relative;
+      z-index: 1;
+      letter-spacing: 1px;
+    }
 
-        h2 {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 120px);
+    }
 
-        /* Note Space */
-        .card-note {
-            background-color: #fffdf0;
-            border: 1px solid #e8e3d5;
-            padding: 0;
-            overflow: hidden;
-        }
-        .note-header {
-            padding: 15px 20px 5px 60px;
-            color: #b5b0a2;
-            font-weight: bold;
-        }
-        .note-content {
-            flex: 1;
-            width: 100%;
-            border: none;
-            outline: none;
-            padding: 0 20px 20px 60px;
-            background: 
-                linear-gradient(90deg, transparent 54px, #ffb3b3 54px, #ffb3b3 56px, transparent 56px),
-                repeating-linear-gradient(transparent, transparent 31px, #e0e0e0 31px, #e0e0e0 32px);
-            line-height: 32px;
-            font-size: 16px;
-            resize: none;
-            font-family: inherit;
-            background-attachment: local;
-        }
+    .card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(242, 201, 76, 0.1);
+      position: relative;
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
 
-        /* Learning Viewer */
-        .card-viewer {
-            padding: 12px;
-            background: #2c2c2c;
-            border: 12px solid;
-            border-image: var(--gold-gradient) 1;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2), inset 0 0 15px rgba(0,0,0,0.5);
-        }
-        .viewer-controls {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .viewer-controls input {
-            flex: 1;
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #1a1a1a;
-            color: #fff;
-            font-size: 12px;
-        }
-        .viewer-controls button {
-            background: var(--gold-gradient);
-            border: none;
-            padding: 6px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #332200;
-        }
-        iframe {
-            flex: 1;
-            width: 100%;
-            border-radius: 4px;
-            border: none;
-            background: white;
-        }
+    .card:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
 
-        /* Tasks Space */
-        .card-tasks {
-            flex-direction: row;
-            gap: 20px;
-        }
-        .task-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .task-section h3 {
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid var(--bg-color);
-        }
-        .task-list {
-            list-style: none;
-            overflow-y: auto;
-            flex: 1;
-        }
-        .task-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
-        .task-item input[type="checkbox"] {
-            accent-color: var(--accent-yellow);
-            cursor: pointer;
-        }
-        .task-item span[contenteditable] {
-            flex: 1;
-            outline: none;
-        }
-        .task-item span[contenteditable]:focus {
-            background: #fdf6e3;
-        }
-        .delete-btn {
-            opacity: 0.3;
-            cursor: pointer;
-            border: none;
-            background: none;
-        }
-        .delete-btn:hover { opacity: 1; color: red; }
-        
-        .add-task {
-            display: flex;
-            margin-top: 10px;
-            gap: 5px;
-        }
-        .add-task input {
-            flex: 1;
-            padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-        .add-task button {
-            background: var(--accent-yellow);
-            border: none;
-            border-radius: 4px;
-            padding: 4px 8px;
-            cursor: pointer;
-        }
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #5a5a5a;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f2c94c;
+    }
 
-        /* Timer Space (Muscat) */
-        .card-timer {
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            box-shadow: none;
-        }
-        .muscat-visual {
-            position: relative;
-            width: 180px;
-            height: 160px;
-            margin-bottom: 10px;
-        }
-        .grape {
-            position: absolute;
-            width: 50px;
-            height: 55px;
-            background: radial-gradient(circle at 30% 30%, var(--muscat-green), var(--muscat-dark));
-            border-radius: 50%;
-            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.1), 2px 2px 5px rgba(0,0,0,0.1);
-        }
-        .g1 { top: 0; left: 65px; }
-        .g2 { top: 25px; left: 35px; }
-        .g3 { top: 25px; left: 95px; }
-        .g4 { top: 60px; left: 45px; }
-        .g5 { top: 60px; left: 85px; }
-        .g6 { top: 95px; left: 65px; }
-        .stem {
-            position: absolute;
-            top: -15px;
-            left: 85px;
-            width: 8px;
-            height: 25px;
-            background: #4a7c2c;
-            border-radius: 4px;
-            transform: rotate(-10deg);
-        }
-        .timer-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -40%);
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #fff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            pointer-events: none;
-            z-index: 10;
-        }
-        .timer-btns {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            width: 100%;
-        }
-        .timer-btns button {
-            padding: 8px;
-            border: none;
-            border-radius: 10px;
-            background: white;
-            box-shadow: 0 4px 0 #eee;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 12px;
-            transition: transform 0.1s;
-        }
-        .timer-btns button:active { transform: translateY(2px); box-shadow: 0 2px 0 #eee; }
-        .btn-start { background-color: #d8f3dc !important; color: #1b4332; }
+    /* =====================
+       ① ノートスペース（左上）
+    ===================== */
+    .note-card {
+      grid-column: 1;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(to right, #fffbf7 0%, #fffef8 40%, #fffef8 100%);
+      background-image:
+        linear-gradient(to right, #ff9999 0px, #ff9999 3px, transparent 3px),
+        repeating-linear-gradient(
+          transparent,
+          transparent 31px,
+          #e0ddd0 31px,
+          #e0ddd0 32px
+        );
+      background-position: 0 48px, 0 48px;
+      background-size: 100% 100%, 100% 100%;
+      padding-left: 32px;
+    }
 
-    </style>
+    .note-textarea {
+      flex: 1;
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      line-height: 32px;
+      color: #3d3d3d;
+      resize: none;
+      padding: 0 12px 0 16px;
+      cursor: text;
+    }
+
+    /* =====================
+       右側コンテナ
+    ===================== */
+    .right-column {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* =====================
+       ② 教材閲覧スペース（右上）
+    ===================== */
+    .material-card {
+      flex: 1;
+      padding: 6px;
+      background: linear-gradient(135deg, #3d2817 0%, #2a1810 50%, #3d2817 100%);
+      border-radius: 12px;
+      position: relative;
+      box-shadow:
+        0 8px 28px rgba(0, 0, 0, 0.2),
+        inset 0 0 0 2px #8b6914,
+        inset 0 0 0 4px #d4af37,
+        inset 0 0 0 5px #8b6914,
+        inset 0 0 0 8px #e8c547,
+        inset 0 0 0 9px #8b6914,
+        inset 0 0 0 12px #d4af37;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .material-label {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #c9940a, #e8c547, #c9940a);
+      color: #2a1810;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 4px 20px;
+      border-radius: 14px;
+      white-space: nowrap;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .material-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+    }
+
+    .material-url-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #d4af37;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'Inter', monospace;
+    }
+
+    .material-url-input:focus {
+      outline: none;
+      border-color: #e8c547;
+      box-shadow: 0 0 0 2px rgba(232, 197, 71, 0.2);
+    }
+
+    .material-open-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #d4af37, #e8c547);
+      border: none;
+      border-radius: 6px;
+      color: #2a1810;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .material-open-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .material-iframe-wrapper {
+      flex: 1;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #f5f0e8;
+    }
+
+    .material-iframe-wrapper iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .iframe-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #f5f0e8, #ede8de);
+      color: #a89070;
+      font-size: 13px;
+      text-align: center;
+      gap: 12px;
+      border-radius: 4px;
+    }
+
+    .iframe-placeholder .icon {
+      font-size: 44px;
+      opacity: 0.5;
+    }
+
+    /* =====================
+       ③ タスクスペース（左下）
+    ===================== */
+    .task-card {
+      grid-column: 1;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .task-section {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(242, 201, 76, 0.1);
+    }
+
+    .task-section:nth-child(2) {
+      grid-column: 1 / 3;
+    }
+
+    .task-section-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #5a5a5a;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #f2c94c;
+    }
+
+    .goal-list, .todo-list, .schedule-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .goal-item, .todo-item, .schedule-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: #3d3d3d;
+    }
+
+    .goal-item input[type="checkbox"],
+    .todo-item input[type="checkbox"],
+    .schedule-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: #f2c94c;
+      flex-shrink: 0;
+    }
+
+    .goal-label, .todo-label, .schedule-label {
+      flex: 1;
+      word-break: break-word;
+    }
+
+    .todo-delete-btn {
+      background: none;
+      border: none;
+      color: #d9534f;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+      flex-shrink: 0;
+      transition: transform 0.2s;
+    }
+
+    .todo-delete-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .todo-input-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .todo-input-group input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e0ddd0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    }
+
+    .todo-input-group input:focus {
+      outline: none;
+      border-color: #f2c94c;
+      box-shadow: 0 0 0 2px rgba(242, 201, 76, 0.2);
+    }
+
+    .todo-add-btn {
+      padding: 8px 16px;
+      background: #f2c94c;
+      border: none;
+      border-radius: 8px;
+      color: #3d3d3d;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .todo-add-btn:hover {
+      background: #e6b837;
+      transform: translateY(-2px);
+    }
+
+    .schedule-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #e0ddd0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      margin-top: 8px;
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .schedule-input:focus {
+      outline: none;
+      border-color: #f2c94c;
+      box-shadow: 0 0 0 2px rgba(242, 201, 76, 0.2);
+    }
+
+    /* =====================
+       ④ ポモドーロタイマー（右下）
+    ===================== */
+    .timer-card {
+      grid-column: 2;
+      grid-row: 2;
+      background: linear-gradient(135deg, #f0faf6, #e8f5f1);
+      border: 1px solid rgba(90, 200, 120, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 24px;
+      flex-shrink: 0;
+      border-radius: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      min-height: 280px;
+    }
+
+    .muscat-wrap {
+      position: relative;
+      width: 140px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .muscat-stem {
+      position: absolute;
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(to bottom, #6b8c3a, #52692d);
+      top: -8px;
+      border-radius: 2px;
+    }
+
+    .muscat-leaf {
+      position: absolute;
+      width: 28px;
+      height: 24px;
+      background: linear-gradient(135deg, #7ba84a, #5a8638);
+      border-radius: 50% 0 50% 0;
+      top: -12px;
+      left: -18px;
+      transform: rotate(-30deg);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    }
+
+    .muscat-grape {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 32%, #9ee674, #68c237);
+      box-shadow:
+        inset -3px -3px 6px rgba(0, 0, 0, 0.18),
+        0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .grape-1 { width: 28px; height: 28px; top: 0px; left: 56px; }
+    .grape-2 { width: 32px; height: 32px; top: 24px; left: 40px; }
+    .grape-3 { width: 32px; height: 32px; top: 24px; left: 72px; }
+    .grape-4 { width: 36px; height: 36px; top: 52px; left: 28px; }
+    .grape-5 { width: 36px; height: 36px; top: 52px; left: 76px; }
+    .grape-6 { width: 32px; height: 32px; top: 84px; left: 20px; }
+    .grape-7 { width: 32px; height: 32px; top: 84px; left: 88px; }
+    .grape-8 { width: 28px; height: 28px; top: 112px; left: 56px; }
+
+    .timer-display-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 52px;
+      font-weight: 700;
+      color: #2d5a1a;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      text-shadow:
+        2px 2px 4px rgba(255, 255, 255, 0.9),
+        -1px -1px 2px rgba(0, 0, 0, 0.1);
+      z-index: 10;
+    }
+
+    .timer-label {
+      font-size: 12px;
+      color: #5a8c4a;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .timer-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .timer-btn {
+      padding: 10px 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    }
+
+    .timer-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .timer-btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #68c237, #52a030);
+      color: white;
+    }
+
+    .btn-break {
+      background: linear-gradient(135deg, #f2c94c, #e6b837);
+      color: #3d3d3d;
+    }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #e74c3c, #c0392b);
+      color: white;
+    }
+
+    .btn-set {
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+    }
+
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .task-card {
+        grid-column: 1 / 3;
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+
+      .task-section:nth-child(2) {
+        grid-column: 1 / 4;
+      }
+    }
+
+  </style>
 </head>
 <body>
 
-    <div class="dashboard">
-        <!-- Notebook -->
-        <div class="card card-note">
-            <div class="note-header">Notes</div>
-            <textarea id="notebook" class="note-content" placeholder="メモを書き込もう..."></textarea>
-        </div>
+  <h1 class="page-title">📚 Study Dashboard</h1>
 
-        <!-- Viewer -->
-        <div class="card card-viewer">
-            <div class="viewer-controls">
-                <input type="text" id="url-input" placeholder="URLを入力 (例: https://ja.wikipedia.org)">
-                <button id="url-btn">開く</button>
-            </div>
-            <iframe id="viewer-frame" src="about:blank"></iframe>
-        </div>
+  <div class="main-grid">
 
-        <!-- Tasks -->
-        <div class="card card-tasks">
-            <div class="task-section">
-                <h3>Goals</h3>
-                <ul class="task-list" id="goals-list"></ul>
-                <div class="add-task">
-                    <input type="text" id="goal-input" placeholder="目標を追加">
-                    <button onclick="addTask('goals-list', 'goal-input')">+</button>
-                </div>
-            </div>
-            <div class="task-section">
-                <h3>To-Do</h3>
-                <ul class="task-list" id="todo-list"></ul>
-                <div class="add-task">
-                    <input type="text" id="todo-input" placeholder="タスクを追加">
-                    <button onclick="addTask('todo-list', 'todo-input')">+</button>
-                </div>
-            </div>
-            <div class="task-section">
-                <h3>Schedule</h3>
-                <textarea id="schedule-text" class="note-content" style="padding: 10px; font-size: 13px; line-height: 20px; background: none; border: 1px solid #f0f0f0; border-radius: 10px;" placeholder="10:00 読書..."></textarea>
-            </div>
-        </div>
-
-        <!-- Timer -->
-        <div class="card card-timer">
-            <div class="muscat-visual">
-                <div class="stem"></div>
-                <div class="grape g1"></div><div class="grape g2"></div>
-                <div class="grape g3"></div><div class="grape g4"></div>
-                <div class="grape g5"></div><div class="grape g6"></div>
-                <div class="timer-display" id="timer-text">25:00</div>
-            </div>
-            <div class="timer-btns">
-                <button class="btn-start" id="t-start">Start</button>
-                <button id="t-break">Break</button>
-                <button id="t-reset">Reset</button>
-                <button id="t-set">Set</button>
-            </div>
-        </div>
+    <!-- ① ノートスペース（左上） -->
+    <div class="card note-card" id="noteCard">
+      <div class="card-title">📓 Notes</div>
+      <textarea
+        class="note-textarea"
+        id="noteTextarea"
+        placeholder="ここに学習内容をメモしてください..."
+      ></textarea>
     </div>
 
-    <script>
-        // --- Storage Logic ---
-        const saveData = () => {
-            const data = {
-                note: document.getElementById('notebook').value,
-                schedule: document.getElementById('schedule-text').value,
-                goals: document.getElementById('goals-list').innerHTML,
-                todo: document.getElementById('todo-list').innerHTML
-            };
-            localStorage.setItem('focus_db_save', JSON.stringify(data));
-        };
+    <!-- 右側コンテナ -->
+    <div class="right-column">
 
-        const loadData = () => {
-            const raw = localStorage.getItem('focus_db_save');
-            if (raw) {
-                const data = JSON.parse(raw);
-                document.getElementById('notebook').value = data.note || "";
-                document.getElementById('schedule-text').value = data.schedule || "";
-                document.getElementById('goals-list').innerHTML = data.goals || "";
-                document.getElementById('todo-list').innerHTML = data.todo || "";
-            }
-        };
+      <!-- ② 教材閲覧スペース（右上） -->
+      <div class="card material-card" id="materialCard">
+        <span class="material-label">📖 Learning Viewer</span>
+        <div class="material-controls">
+          <input
+            type="text"
+            class="material-url-input"
+            id="materialUrl"
+            placeholder="https://example.com"
+          />
+          <button class="material-open-btn" onclick="loadMaterial()">開く</button>
+        </div>
+        <div class="material-iframe-wrapper">
+          <div class="iframe-placeholder" id="iframePlaceholder">
+            <div class="icon">🖼️</div>
+            <p>URLを入力して「開く」をクリック</p>
+          </div>
+          <iframe id="materialIframe" style="display:none;"></iframe>
+        </div>
+      </div>
 
-        // --- Task Logic ---
-        const addTask = (listId, inputId) => {
-            const input = document.getElementById(inputId);
-            if (!input.value.trim()) return;
-            const li = document.createElement('li');
-            li.className = 'task-item';
-            li.innerHTML = `
-                <input type="checkbox" onchange="saveData()">
-                <span contenteditable="true" onblur="saveData()">${input.value}</span>
-                <button class="delete-btn" onclick="this.parentElement.remove();saveData();">🗑</button>
-            `;
-            document.getElementById(listId).appendChild(li);
-            input.value = "";
-            saveData();
-        };
+      <!-- ④ ポモドーロタイマー（右下） -->
+      <div class="card timer-card" id="timerCard">
+        <div class="muscat-wrap">
+          <div class="muscat-stem"></div>
+          <div class="muscat-leaf"></div>
+          <div class="muscat-grape grape-1"></div>
+          <div class="muscat-grape grape-2"></div>
+          <div class="muscat-grape grape-3"></div>
+          <div class="muscat-grape grape-4"></div>
+          <div class="muscat-grape grape-5"></div>
+          <div class="muscat-grape grape-6"></div>
+          <div class="muscat-grape grape-7"></div>
+          <div class="muscat-grape grape-8"></div>
+          <div class="timer-display-overlay" id="timerDisplay">25:00</div>
+        </div>
+        <div class="timer-label">🍇 Pomodoro Timer</div>
+        <div class="timer-buttons">
+          <button class="timer-btn btn-start" onclick="startTimer()">▶ Start</button>
+          <button class="timer-btn btn-break" onclick="startBreak()">☕ Break</button>
+          <button class="timer-btn btn-reset" onclick="resetTimer()">↺ Reset</button>
+          <button class="timer-btn btn-set" onclick="setTime()">⚙ Set</button>
+        </div>
+      </div>
 
-        // --- Timer Logic ---
-        let timerSeconds = 1500;
-        let timerInterval = null;
+    </div>
 
-        const updateDisplay = () => {
-            const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
-            const s = (timerSeconds % 60).toString().padStart(2, '0');
-            document.getElementById('timer-text').textContent = `${m}:${s}`;
-        };
+    <!-- ③ タスクスペース（左下） -->
+    <div class="task-card" id="taskCard">
 
-        const startTimer = () => {
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerInterval = null;
-                document.getElementById('t-start').textContent = 'Start';
-                return;
-            }
-            document.getElementById('t-start').textContent = 'Pause';
-            timerInterval = setInterval(() => {
-                if (timerSeconds > 0) {
-                    timerSeconds--;
-                    updateDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    alert("Time is up!");
-                }
-            }, 1000);
-        };
+      <!-- 今日の目標 -->
+      <div class="task-section">
+        <div class="task-section-title">🎯 Goals</div>
+        <ul class="goal-list" id="goalList">
+          <li class="goal-item">
+            <input type="checkbox" class="goal-check" />
+            <span class="goal-label">宿題を終わらせる</span>
+          </li>
+          <li class="goal-item">
+            <input type="checkbox" class="goal-check" />
+            <span class="goal-label">ノート復習</span>
+          </li>
+          <li class="goal-item">
+            <input type="checkbox" class="goal-check" />
+            <span class="goal-label">問題演習</span>
+          </li>
+        </ul>
+      </div>
 
-        // --- Event Listeners ---
-        document.getElementById('url-btn').addEventListener('click', () => {
-            let url = document.getElementById('url-input').value;
-            if (url && !url.startsWith('http')) url = 'https://' + url;
-            document.getElementById('viewer-frame').src = url;
-        });
+      <!-- スケジュール -->
+      <div class="task-section">
+        <div class="task-section-title">🕐 Schedule</div>
+        <textarea
+          class="schedule-input"
+          id="scheduleText"
+          placeholder="例:&#10;10:00 - 数学の勉強&#10;11:00 - 休憩&#10;11:30 - 英語の問題"
+        ></textarea>
+      </div>
 
-        document.getElementById('t-start').addEventListener('click', startTimer);
-        document.getElementById('t-break').addEventListener('click', () => {
-            clearInterval(timerInterval); timerInterval = null;
-            timerSeconds = 300; updateDisplay(); startTimer();
-        });
-        document.getElementById('t-reset').addEventListener('click', () => {
-            clearInterval(timerInterval); timerInterval = null;
-            timerSeconds = 1500; updateDisplay();
-            document.getElementById('t-start').textContent = 'Start';
-        });
-        document.getElementById('t-set').addEventListener('click', () => {
-            const mins = prompt("分数を入力してください:", "25");
-            if (mins && !isNaN(mins)) {
-                timerSeconds = parseInt(mins) * 60;
-                updateDisplay();
-            }
-        });
+      <!-- To-Doリスト -->
+      <div class="task-section" style="grid-column: 1 / 3;">
+        <div class="task-section-title">✓ To-Do List</div>
+        <ul class="todo-list" id="todoList"></ul>
+        <div class="todo-input-group">
+          <input
+            type="text"
+            id="todoInput"
+            placeholder="新しいタスクを入力..."
+            onkeypress="if(event.key==='Enter') addTodo()"
+          />
+          <button class="todo-add-btn" onclick="addTodo()">追加</button>
+        </div>
+      </div>
 
-        document.getElementById('notebook').addEventListener('input', saveData);
-        document.getElementById('schedule-text').addEventListener('input', saveData);
+    </div>
 
-        window.onload = loadData;
-    </script>
+  </div>
+
+  <script>
+
+    /* =====================
+       LocalStorage管理
+    ===================== */
+    function saveToLocalStorage(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function getFromLocalStorage(key, defaultValue) {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : defaultValue;
+    }
+
+    /* =====================
+       ノート機能
+    ===================== */
+    const noteTextarea = document.getElementById('noteTextarea');
+    noteTextarea.value = getFromLocalStorage('notes', '');
+
+    noteTextarea.addEventListener('input', () => {
+      saveToLocalStorage('notes', noteTextarea.value);
+    });
+
+    /* =====================
+       教材機能
+    ===================== */
+    function loadMaterial() {
+      const url = document.getElementById('materialUrl').value;
+      if (!url) {
+        alert('URLを入力してください');
+        return;
+      }
+
+      const iframe = document.getElementById('materialIframe');
+      const placeholder = document.getElementById('iframePlaceholder');
+
+      iframe.src = url;
+      iframe.style.display = 'block';
+      placeholder.style.display = 'none';
+
+      saveToLocalStorage('materialUrl', url);
+    }
+
+    window.addEventListener('load', () => {
+      const savedUrl = getFromLocalStorage('materialUrl', '');
+      if (savedUrl) {
+        document.getElementById('materialUrl').value = savedUrl;
+        loadMaterial();
+      }
+    });
+
+    /* =====================
+       タスク機能
+    ===================== */
+    let goals = getFromLocalStorage('goals', [
+      { text: '宿題を終わらせる', completed: false },
+      { text: 'ノート復習', completed: false },
+      { text: '問題演習', completed: false }
+    ]);
+
+    let todos = getFromLocalStorage('todos', []);
+
+    function renderGoals() {
+      const goalList = document.getElementById('goalList');
+      goalList.innerHTML = goals.map((goal, index) => `
+        <li class="goal-item">
+          <input type="checkbox" class="goal-check" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})" />
+          <span class="goal-label">${goal.text}</span>
+        </li>
+      `).join('');
+    }
+
+    function toggleGoal(index) {
+      goals[index].completed = !goals[index].completed;
+      saveToLocalStorage('goals', goals);
+      renderGoals();
+    }
+
+    function renderTodos() {
+      const todoList = document.getElementById('todoList');
+      todoList.innerHTML = todos.map((todo, index) => `
+        <li class="todo-item">
+          <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo(${index})" />
+          <span class="todo-label" style="${todo.completed ? 'text-decoration: line-through; color: #a0a0a0;' : ''}">${todo.text}</span>
+          <button class="todo-delete-btn" onclick="deleteTodo(${index})">🗑</button>
+        </li>
+      `).join('');
+    }
+
+    function toggleTodo(index) {
+      todos[index].completed = !todos[index].completed;
+      saveToLocalStorage('todos', todos);
+      renderTodos();
+    }
+
+    function addTodo() {
+      const input = document.getElementById('todoInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      todos.push({ text, completed: false });
+      saveToLocalStorage('todos', todos);
+      renderTodos();
+      input.value = '';
+    }
+
+    function deleteTodo(index) {
+      todos.splice(index, 1);
+      saveToLocalStorage('todos', todos);
+      renderTodos();
+    }
+
+    const scheduleText = document.getElementById('scheduleText');
+    scheduleText.value = getFromLocalStorage('schedule', '');
+
+    scheduleText.addEventListener('input', () => {
+      saveToLocalStorage('schedule', scheduleText.value);
+    });
+
+    renderGoals();
+    renderTodos();
+
+    /* =====================
+       ポモドーロタイマー機能
+    ===================== */
+    let timerInterval = null;
+    let timeLeft = 1500; // 25分（秒単位）
+    let isRunning = false;
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      document.getElementById('timerDisplay').textContent =
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      if (isRunning) return;
+      isRunning = true;
+
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          isRunning = false;
+          alert('ポモドーロ完了！休憩しましょう');
+        }
+      }, 1000);
+    }
+
+    function startBreak() {
+      if (isRunning) clearInterval(timerInterval);
+      isRunning = false;
+      timeLeft = 300; // 5分
+      updateTimerDisplay();
+
+      isRunning = true;
+      timerInterval = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          isRunning = false;
+          alert('休憩時間終了！');
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      if (isRunning) clearInterval(timerInterval);
+      isRunning = false;
+      timeLeft = 1500;
+      updateTimerDisplay();
+    }
+
+    function setTime() {
+      const minutes = prompt('分数を入力してください:', '25');
+      if (minutes && !isNaN(minutes)) {
+        if (isRunning) clearInterval(timerInterval);
+        isRunning = false;
+        timeLeft = parseInt(minutes) * 60;
+        updateTimerDisplay();
+      }
+    }
+
+    updateTimerDisplay();
+
+  </script>
+
 </body>
 </html>
-
