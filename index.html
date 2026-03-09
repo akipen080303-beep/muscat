@@ -1,107 +1,574 @@
-    <div class="note-paper-area" role="region" aria-label="ノートエリア">
-      <div class="note-head">Notes</div>
-      <textarea class="note-textarea" placeholder="ここにメモを書きます..." aria-label="ノート入力"></textarea>
-    </div>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>集中学習ダッシュボード</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f6f1e8;
+      --accent:#f2c94c;
+      --card-bg:#ffffff;
+      --muted:#7b7b7b;
+      --text:#3d3d3d;
+      --note-cream:#fff8ec;
+      --shadow: 0 10px 30px rgba(60,50,40,0.09);
+      --card-radius:20px;
+      --gold-1:#f9e38b;
+      --gold-2:#d4a22e;
+      --gold-3:#fff6d4;
+      --green-1:#bfe8a6;
+      --green-2:#7fbf4a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);font-family:Inter, "Noto Sans JP", system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;}
+    /* page layout with generous outer padding for doodles */
+    .page{
+      min-height:100vh;
+      padding:48px 64px;
+      position:relative;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 0.72fr;
+      gap:28px;
+    }
 
-    <div class="drag-hint">drag</div>
-  </section>
+    /* background doodles */
+    .doodles{
+      position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.18;
+      background-image:
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000"><g fill="none" stroke="%233d3d3d" stroke-width="1.3" opacity="0.12" stroke-linecap="round" stroke-linejoin="round"><path d="M60 120c40-20 90-10 130 6"/><path d="M1400 120c-40 10-90 20-130 6"/><path d="M120 780c50-30 120-30 180-12"/><path d="M1300 760c-30-20-80-10-120 6"/><rect x="40" y="40" width="120" height="80" rx="8"/><path d="M58 90 l90 0"/><path d="M1280 60 l48 0"/><path d="M200 220 l90 28"/><path d="M1100 520 l60 -22"/><path d="M300 600 l40 -10"/><path d="M350 610 l18 8"/></g><g fill="%23f2c94c" opacity="0.06"><circle cx="200" cy="140" r="60"/><rect x="1120" y="60" width="160" height="100" rx="12"/></g></svg>');
+      background-repeat:no-repeat;
+      background-position: left top;
+      background-size:cover;
+    }
 
-  <!-- Frame (right-top) -->
-  <section class="frame-card card-like" aria-label="教材スペース">
-    <div class="gold-frame">
-      <div class="frame-title">教材スペース</div>
-      <div class="iframe-shell" role="region" aria-label="教材表示">
-        <iframe src="about:blank" title="教材表示エリア"></iframe>
-      </div>
-    </div>
-    <div class="drag-hint">drag</div>
-  </section>
+    /* Card base */
+    .card{
+      background:var(--card-bg);
+      border-radius:var(--card-radius);
+      box-shadow:var(--shadow);
+      padding:20px;
+      position:relative;
+      z-index:1;
+      border:1px solid rgba(60,50,40,0.04);
+    }
 
-  <!-- Plan (left-bottom) -->
-  <section class="plan-card card-like" aria-label="作業計画スペース">
-    <div class="drag-hint">drag</div>
-    <div class="plan-top">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:18px;height:36px;background:#e88c72;border-radius:6px;box-shadow:inset 0 -4px 0 rgba(0,0,0,0.08)"></div>
-        <div class="plan-title">Today's Tasks ✎</div>
-      </div>
-      <div class="plan-line" aria-hidden="true"></div>
-    </div>
+    /* grid placement */
+    .notes{grid-column:1 / 2; grid-row:1 / 2; display:flex;flex-direction:column;}
+    .viewer{grid-column:2 / 3; grid-row:1 / 2; display:flex;flex-direction:column;}
+    .tasks{grid-column:1 / 2; grid-row:2 / 3; display:flex;flex-direction:column;}
+    .timer{grid-column:2 / 3; grid-row:2 / 3; display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;}
 
-    <div class="plan-grid">
-      <div class="plan-section goals">
-        <h3>Goals for Today</h3>
-        <div class="plan-content">
-          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.9">
-            <li>□ 英単語を50個復習する</li>
-            <li>□ 数学の問題集を2章進める</li>
-            <li>□ 授業ノートを整理する</li>
-          </ul>
+    /* generous padding inside to leave space around content for doodles */
+    .notes .card, .viewer .card, .tasks .card, .timer .card{height:100%;}
+
+    /* NOTES - vertical notebook style */
+    .notes .card{
+      padding:28px 24px 24px 64px;
+      background:linear-gradient(180deg,var(--note-cream) 0%, #fffdf7 100%);
+      overflow:hidden;
+    }
+    .notes .binding{
+      position:absolute;left:24px;top:28px;bottom:28px;width:36px;display:flex;flex-direction:column;justify-content:space-around;pointer-events:none;
+    }
+    .notes .binding span{
+      width:18px;height:14px;border-radius:50%;
+      border:3px solid rgba(120,60,40,0.7);
+      border-right-color:transparent;background:transparent;
+    }
+    .notes .paper{
+      position:absolute;inset:26px 26px 26px 74px;border-radius:14px;padding:18px;
+      background:
+        repeating-linear-gradient(180deg, rgba(60,60,60,0.04) 0 28px, transparent 28px 30px),
+        var(--note-cream);
+      border-left:6px solid rgba(220,60,60,0.14);
+      box-shadow: 0 8px 20px rgba(40,30,20,0.06);
+    }
+    .notes h2{margin:0 0 8px 4px;font-size:18px;color:var(--muted);font-weight:700}
+    .notes textarea{
+      width:100%;height:calc(100% - 40px);border:0;background:transparent;resize:none;padding:8px 6px;font-size:15px;line-height:28px;color:var(--text);outline:none;
+      caret-color:var(--accent);
+    }
+
+    /* VIEWER - gold ornate frame */
+    .viewer .card{
+      display:flex;flex-direction:column;padding:22px;border-radius:22px;
+      background:linear-gradient(180deg,#fffaf0 0%,#fff7e6 100%);
+    }
+    .frame{
+      flex:1;border-radius:14px;padding:14px;background:
+        linear-gradient(180deg,var(--gold-3), #fff2cc 30%, var(--gold-1));
+      border:6px solid;
+      border-image: linear-gradient(180deg, var(--gold-1), var(--gold-2)) 1;
+      box-shadow: 0 12px 30px rgba(110,80,20,0.12), inset 0 2px 0 rgba(255,255,255,0.6);
+      position:relative;overflow:hidden;display:flex;flex-direction:column;
+    }
+    .frame .ornament{
+      position:absolute;width:76px;height:76px;right:12px;top:12px;background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 40%),
+      linear-gradient(135deg, rgba(255,255,255,0.12), transparent 40%);
+      border-radius:12px;transform:rotate(12deg);box-shadow:inset 0 2px 8px rgba(0,0,0,0.06);
+      opacity:0.9;
+    }
+    .frame .ornament.left{left:12px;right:auto;top:12px;transform:rotate(-8deg)}
+    .frame .title{position:absolute;left:18px;top:14px;font-weight:800;color:#6b4d18;letter-spacing:0.02em}
+    .frame .inner{
+      margin-top:38px;border-radius:8px;background:#fff;flex:1;overflow:hidden;border:3px solid rgba(0,0,0,0.04);
+    }
+    .frame .controls{display:flex;gap:8px;margin-top:12px;align-items:center}
+    .frame input[type="url"]{flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(60,40,20,0.06);outline:none;font-size:14px}
+    .frame button{background:var(--accent);border:none;padding:9px 12px;border-radius:10px;color:#222;font-weight:700;cursor:pointer;box-shadow:0 6px 14px rgba(220,150,40,0.14)}
+    .frame iframe{width:100%;height:100%;border:0;background:#fff}
+
+    /* TASKS - larger bottom-left */
+    .tasks .card{
+      padding:20px 18px;border-radius:18px;display:flex;flex-direction:column;gap:14px;
+    }
+    .tasks .top{display:flex;align-items:center;gap:12px}
+    .tasks h3{margin:0;font-size:18px;color:#5a4a3a}
+    .tasks .sections{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:160px}
+    .section{background:linear-gradient(180deg,#fff,#fffaf7);padding:12px;border-radius:12px;border:1px solid rgba(70,50,30,0.04);display:flex;flex-direction:column;gap:8px}
+    .section h4{margin:0;font-size:15px;color:var(--muted);font-weight:700}
+    /* Goals list (editable checkboxes) */
+    .goals-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
+    .goal-item{display:flex;align-items:center;gap:8px}
+    .goal-item input[type="checkbox"]{width:18px;height:18px}
+    .goal-item input[type="text"]{border:0;background:transparent;outline:none;font-size:14px;color:var(--text);min-width:0}
+    /* To-do input */
+    .todo-input{display:flex;gap:8px}
+    .todo-input input{flex:1;padding:8px;border-radius:10px;border:1px solid rgba(80,60,40,0.06);outline:none}
+    .todo-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
+    .todo-item{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:6px 8px;border-radius:8px;background:rgba(0,0,0,0.02)}
+    .todo-left{display:flex;align-items:center;gap:8px;min-width:0}
+    .todo-left input[type="checkbox"]{width:18px;height:18px}
+    .todo-left .text{font-size:14px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .todo-actions button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:6px;border-radius:6px}
+    /* schedule */
+    .schedule-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
+    .sched-item{display:flex;gap:8px;align-items:center}
+    .sched-item input{border:0;background:transparent;outline:none;font-size:14px;color:var(--text)}
+    .small-muted{font-size:13px;color:var(--muted)}
+
+    /* TIMER - muscat motif and controls */
+    .timer .card{
+      width:320px;min-height:220px;padding:18px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:linear-gradient(180deg,#f8fff6 0%, #f1f8ed 100%);
+    }
+    .cluster-wrap{position:relative;width:180px;height:160px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .cluster{position:relative;width:160px;height:140px;display:flex;flex-wrap:wrap;gap:8px;align-content:center;justify-content:center;filter:drop-shadow(0 10px 22px rgba(40,60,30,0.12))}
+    .grape{width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--green-1),var(--green-2));border:3px solid rgba(40,80,30,0.12);box-shadow: inset 0 -8px 16px rgba(0,0,0,0.08), 0 6px 14px rgba(40,80,30,0.08);position:relative}
+    .grape::after{content:"";position:absolute;left:8px;top:6px;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 30% 30%, rgba(255,255,255,0.88), rgba(255,255,255,0.5) 40%, transparent 60%);opacity:0.95}
+    .vine{position:absolute;top:-20px;left:54px;width:80px;height:48px}
+    .leaf{position:absolute;width:40px;height:26px;border-radius:14px;background:linear-gradient(180deg,#7fc85f,#3e7b2b);border:2px solid rgba(0,0,0,0.06)}
+    .leaf.l1{left:0;top:6px;transform:rotate(-26deg)}
+    .leaf.l2{left:26px;top:0;transform:rotate(6deg)}
+    .leaf.l3{left:52px;top:8px;transform:rotate(26deg)}
+    .time-display{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:rgba(18,28,20,0.9);color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;font-size:34px;box-shadow:0 10px 26px rgba(10,20,10,0.18);z-index:5}
+    .timer-controls{position:absolute;right:12px;bottom:12px;display:flex;gap:8px;flex-direction:column;align-items:center}
+    .controls-row{display:flex;gap:8px}
+    .btn{padding:8px 12px;border-radius:10px;border:none;font-weight:700;cursor:pointer}
+    .btn.start{background:var(--green-2);color:#fff}
+    .btn.break{background:#6da3e6;color:#fff}
+    .btn.reset{background:#e08b6b;color:#fff}
+    .btn.set{background:#f2c94c;color:#2b2b2b}
+    .small-note{font-size:13px;color:var(--muted);margin-top:8px}
+
+    /* scrollbar small */
+    .goals-list::-webkit-scrollbar, .todo-list::-webkit-scrollbar, .schedule-list::-webkit-scrollbar{height:6px;width:6px}
+    .goals-list::-webkit-scrollbar-thumb, .todo-list::-webkit-scrollbar-thumb, .schedule-list::-webkit-scrollbar-thumb{background:rgba(60,60,60,0.08);border-radius:6px}
+
+    @media (max-width:1100px){
+      .page{padding:24px;grid-template-columns:1fr;grid-template-rows:auto auto auto auto;gap:18px}
+      .timer .card{width:100%}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="doodles" aria-hidden="true"></div>
+  <div class="page" role="main">
+    <div class="notes">
+      <div class="card">
+        <div class="binding" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="paper">
+          <h2>Notes</h2>
+          <textarea id="notesArea" placeholder="ここにノートを書いてください（ローカルに保存されます）"></textarea>
         </div>
       </div>
+    </div>
 
-      <div class="plan-section todo">
-        <h3>To-Do List</h3>
-        <div class="plan-content">
-          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.9">
-            <li>□ Quiz Review</li>
-            <li>□ Read Article</li>
-            <li>□ Flashcards</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="plan-section schedule">
-        <h3>Schedule</h3>
-        <div class="plan-content">
-          <ul style="list-style:none;padding:0;margin:0;font-size:15px;color:var(--muted);line-height:1.8">
-            <li><strong style="width:64px;display:inline-block;color:#6c5845">10:00</strong> Study</li>
-            <li><strong style="width:64px;display:inline-block;color:#6c5845">11:00</strong> Break</li>
-            <li><strong style="width:64px;display:inline-block;color:#6c5845">11:30</strong> Review</li>
-            <li><strong style="width:64px;display:inline-block;color:#6c5845">13:00</strong> Practice</li>
-          </ul>
+    <div class="viewer">
+      <div class="card">
+        <div class="frame">
+          <div class="ornament left" aria-hidden="true"></div>
+          <div class="ornament" aria-hidden="true"></div>
+          <div class="title">Learning Viewer</div>
+          <div class="controls" style="z-index:2">
+            <input id="viewerUrl" type="url" placeholder="https://example.com" aria-label="教材URL" />
+            <button id="openBtn" type="button">開く</button>
+          </div>
+          <div class="inner" style="margin-top:8px;">
+            <iframe id="viewerFrame" src="about:blank" title="教材表示"></iframe>
+          </div>
         </div>
       </div>
     </div>
 
-    <div style="position:absolute;bottom:14px;left:18px;font-size:24px;opacity:0.9">🍎</div>
-    <div style="position:absolute;bottom:14px;right:18px;width:94px;height:10px;border-radius:999px;background:linear-gradient(90deg,#6eaa49 0 24%, #f1cd6a 24% 76%, #d9705b 76% 92%, #f8e8cc 92% 100%);transform:rotate(-18deg);opacity:0.9"></div>
-  </section>
+    <div class="tasks">
+      <div class="card">
+        <div class="top">
+          <h3>Tasks</h3>
+          <div style="flex:1"></div>
+          <div class="small-muted">自動保存</div>
+        </div>
 
-  <!-- Timer (right-bottom) - muscat cluster -->
-  <aside class="timer-card card-like" aria-label="ポモドーロタイマー">
-    <div class="drag-hint">drag</div>
+        <div class="sections" style="margin-top:6px;">
+          <div class="section">
+            <h4>Goals</h4>
+            <div class="goals-list" id="goalsList">
+              <div class="goal-item"><input type="checkbox" data-key="g0"><input type="text" data-key="t0" value="宿題を終わらせる"></div>
+              <div class="goal-item"><input type="checkbox" data-key="g1"><input type="text" data-key="t1" value="ノート復習"></div>
+              <div class="goal-item"><input type="checkbox" data-key="g2"><input type="text" data-key="t2" value="英単語暗記"></div>
+            </div>
+          </div>
 
-    <div class="muscat-wrap" aria-hidden="true">
-      <div class="cluster" role="img" aria-label="マスカットのイラスト">
-        <!-- create multiple grapes arranged in cluster -->
-        <div class="grape" style="transform:scale(1.05) translate(6px, -6px)"></div>
-        <div class="grape" style="transform:scale(1.02) translate(32px, -6px)"></div>
-        <div class="grape" style="transform:scale(0.98) translate(68px, 0px)"></div>
-        <div class="grape" style="transform:scale(1.1) translate(12px, 22px)"></div>
-        <div class="grape" style="transform:scale(0.96) translate(44px, 22px)"></div>
-        <div class="grape" style="transform:scale(0.9) translate(76px, 24px)"></div>
-        <div class="grape" style="transform:scale(0.88) translate(26px, 44px)"></div>
-        <div class="grape" style="transform:scale(0.92) translate(58px, 44px)"></div>
+          <div class="section">
+            <h4>To-Do</h4>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="todo-input">
+                <input id="todoInput" placeholder="新しいタスクを追加..." />
+                <button id="addTodo" class="btn set">追加</button>
+              </div>
+              <div class="todo-list" id="todoList"></div>
+            </div>
+          </div>
 
-        <div class="vine" aria-hidden="true">
-          <div class="leaf l1"></div>
-          <div class="leaf l2"></div>
-          <div class="leaf l3"></div>
+          <div class="section">
+            <h4>Schedule</h4>
+            <div class="schedule-list" id="scheduleList">
+              <div class="sched-item"><input class="sched-time" placeholder="09:00" value="10:00" /><input class="sched-text" placeholder="内容" value="英語学習"></div>
+              <div class="sched-item"><input class="sched-time" placeholder="11:00" value="11:30" /><input class="sched-text" placeholder="内容" value="休憩"></div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button id="addSched" class="btn set">行追加</button>
+              <button id="saveAll" class="btn" style="background:#e0e0e0;color:#333">保存</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="timer-display" aria-live="polite">25:00</div>
-
-    <div class="timer-controls" aria-hidden="false">
-      <div class="btn-row">
-        <button class="timer-btn start">Start</button>
-        <button class="timer-btn reset">Reset</button>
-      </div>
-      <div class="btn-row">
-        <button class="timer-btn break">Break</button>
+    <div class="timer">
+      <div class="card" role="region" aria-label="ポモドーロタイマー">
+        <div class="cluster-wrap" aria-hidden="false">
+          <div class="cluster" id="muscatCluster" aria-hidden="true">
+            <div class="grape" style="transform:translate(6px,-6px) scale(1.05)"></div>
+            <div class="grape" style="transform:translate(34px,-6px) scale(1.02)"></div>
+            <div class="grape" style="transform:translate(66px,0px) scale(0.98)"></div>
+            <div class="grape" style="transform:translate(12px,22px) scale(1.1)"></div>
+            <div class="grape" style="transform:translate(46px,22px) scale(0.96)"></div>
+            <div class="grape" style="transform:translate(78px,24px) scale(0.9)"></div>
+            <div class="grape" style="transform:translate(26px,44px) scale(0.88)"></div>
+            <div class="grape" style="transform:translate(58px,44px) scale(0.92)"></div>
+            <div class="vine" aria-hidden="true">
+              <div class="leaf l1"></div>
+              <div class="leaf l2"></div>
+              <div class="leaf l3"></div>
+            </div>
+          </div>
+          <div class="time-display" id="timeDisplay">25:00</div>
+          <div class="timer-controls">
+            <div class="controls-row">
+              <button id="startBtn" class="btn start">Start</button>
+              <button id="breakBtn" class="btn break">Break</button>
+            </div>
+            <div class="controls-row">
+              <button id="resetBtn" class="btn reset">Reset</button>
+              <button id="setBtn" class="btn set">Set</button>
+            </div>
+          </div>
+        </div>
+        <div class="small-note">マスカットモチーフのタイマー</div>
       </div>
     </div>
-  </aside>
-</main>
+  </div>
+
+  <script>
+    // Notes auto-save
+    const notesArea = document.getElementById('notesArea');
+    const NOTES_KEY = 'dash_notes_v1';
+    notesArea.value = localStorage.getItem(NOTES_KEY) || '';
+    notesArea.addEventListener('input', () => {
+      localStorage.setItem(NOTES_KEY, notesArea.value);
+    });
+
+    // Viewer iframe
+    const openBtn = document.getElementById('openBtn');
+    const viewerUrl = document.getElementById('viewerUrl');
+    const viewerFrame = document.getElementById('viewerFrame');
+    openBtn.addEventListener('click', () => {
+      let url = viewerUrl.value.trim();
+      if(!url) return;
+      if(!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      viewerFrame.src = url;
+    });
+
+    // TASKS - Goals
+    const goalsList = document.getElementById('goalsList');
+    const GOALS_KEY = 'dash_goals_v1';
+    function loadGoals(){
+      const raw = localStorage.getItem(GOALS_KEY);
+      if(!raw) return;
+      try{
+        const arr = JSON.parse(raw);
+        // clear existing
+        goalsList.innerHTML = '';
+        arr.forEach((g,i)=>{
+          const div = document.createElement('div');
+          div.className='goal-item';
+          const cb = document.createElement('input');
+          cb.type='checkbox';
+          cb.checked = !!g.checked;
+          cb.addEventListener('change', saveGoals);
+          const txt = document.createElement('input');
+          txt.type='text';
+          txt.value = g.text || '';
+          txt.addEventListener('input', saveGoals);
+          div.appendChild(cb);
+          div.appendChild(txt);
+          goalsList.appendChild(div);
+        });
+      }catch(e){}
+    }
+    function saveGoals(){
+      const items = Array.from(goalsList.querySelectorAll('.goal-item')).map(div=>{
+        const cb = div.querySelector('input[type="checkbox"]');
+        const txt = div.querySelector('input[type="text"]');
+        return {checked:!!cb.checked, text: txt.value};
+      });
+      localStorage.setItem(GOALS_KEY, JSON.stringify(items));
+    }
+    // initialize default if none
+    if(!localStorage.getItem(GOALS_KEY)){
+      const defaults = [
+        {checked:false, text:'宿題を終わらせる'},
+        {checked:false, text:'ノート復習'},
+        {checked:false, text:'英単語暗記'}
+      ];
+      localStorage.setItem(GOALS_KEY, JSON.stringify(defaults));
+    }
+    loadGoals();
+
+    // To-Do list
+    const todoInput = document.getElementById('todoInput');
+    const addTodo = document.getElementById('addTodo');
+    const todoList = document.getElementById('todoList');
+    const TODOS_KEY = 'dash_todos_v1';
+
+    function renderTodos(){
+      todoList.innerHTML='';
+      const raw = localStorage.getItem(TODOS_KEY);
+      let arr = [];
+      try{ arr = raw ? JSON.parse(raw) : []; }catch(e){arr=[];}
+      arr.forEach((t, idx)=>{
+        const item = document.createElement('div');
+        item.className='todo-item';
+        const left = document.createElement('div');
+        left.className='todo-left';
+        const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!t.done;
+        cb.addEventListener('change', ()=>{ t.done = cb.checked; saveTodos(); renderTodos(); });
+        const txt = document.createElement('div'); txt.className='text'; txt.textContent = t.text;
+        if(t.done) txt.style.textDecoration='line-through';
+        left.appendChild(cb); left.appendChild(txt);
+        const actions = document.createElement('div'); actions.className='todo-actions';
+        const del = document.createElement('button'); del.innerHTML='🗑'; del.title='削除';
+        del.addEventListener('click', ()=>{ arr.splice(idx,1); localStorage.setItem(TODOS_KEY, JSON.stringify(arr)); renderTodos(); });
+        actions.appendChild(del);
+        item.appendChild(left); item.appendChild(actions);
+        todoList.appendChild(item);
+      });
+    }
+    function saveTodos(){
+      const raw = localStorage.getItem(TODOS_KEY);
+      let arr = [];
+      try{ arr = raw ? JSON.parse(raw) : []; }catch(e){arr=[];}
+      // nothing to do here since editing via UI not inline except check toggles handled
+      localStorage.setItem(TODOS_KEY, JSON.stringify(arr));
+    }
+    addTodo.addEventListener('click', ()=>{
+      const txt = todoInput.value.trim();
+      if(!txt) return;
+      let arr = [];
+      try{ arr = localStorage.getItem(TODOS_KEY) ? JSON.parse(localStorage.getItem(TODOS_KEY)) : []; }catch(e){arr=[];}
+      arr.push({text:txt, done:false});
+      localStorage.setItem(TODOS_KEY, JSON.stringify(arr));
+      todoInput.value='';
+      renderTodos();
+    });
+    // allow Enter to add
+    todoInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ addTodo.click(); } });
+
+    if(!localStorage.getItem(TODOS_KEY)){
+      localStorage.setItem(TODOS_KEY, JSON.stringify([
+        {text:'Quiz Review', done:false},
+        {text:'Read Article', done:false}
+      ]));
+    }
+    renderTodos();
+
+    // Schedule
+    const scheduleList = document.getElementById('scheduleList');
+    const addSched = document.getElementById('addSched');
+    const SCHED_KEY = 'dash_sched_v1';
+    function loadSched(){
+      const raw = localStorage.getItem(SCHED_KEY);
+      if(!raw) return;
+      try{
+        const arr = JSON.parse(raw);
+        scheduleList.innerHTML = '';
+        arr.forEach(it=>{
+          const div = document.createElement('div'); div.className='sched-item';
+          const t = document.createElement('input'); t.className='sched-time'; t.value = it.time || ''; t.placeholder='09:00';
+          const tx = document.createElement('input'); tx.className='sched-text'; tx.value = it.text || ''; tx.placeholder='内容';
+          div.appendChild(t); div.appendChild(tx);
+          scheduleList.appendChild(div);
+        });
+      }catch(e){}
+    }
+    function saveSched(){
+      const arr = Array.from(scheduleList.querySelectorAll('.sched-item')).map(div=>{
+        return {time:div.querySelector('.sched-time').value, text:div.querySelector('.sched-text').value};
+      });
+      localStorage.setItem(SCHED_KEY, JSON.stringify(arr));
+    }
+    addSched.addEventListener('click', ()=>{
+      const div = document.createElement('div'); div.className='sched-item';
+      const t = document.createElement('input'); t.className='sched-time'; t.placeholder='09:00';
+      const tx = document.createElement('input'); tx.className='sched-text'; tx.placeholder='内容';
+      div.appendChild(t); div.appendChild(tx);
+      scheduleList.appendChild(div);
+    });
+    document.getElementById('saveAll').addEventListener('click', ()=>{
+      saveGoals();
+      saveSched();
+      // also save todos state
+      const rawTodos = localStorage.getItem(TODOS_KEY);
+      if(rawTodos) localStorage.setItem(TODOS_KEY, rawTodos);
+      alert('保存しました');
+    });
+    if(!localStorage.getItem(SCHED_KEY)){
+      localStorage.setItem(SCHED_KEY, JSON.stringify([
+        {time:'10:00', text:'Study'},
+        {time:'11:00', text:'Break'}
+      ]));
+    }
+    loadSched();
+
+    // persist changes on blur for goals and schedule
+    goalsList.addEventListener('input', saveGoals);
+    scheduleList.addEventListener('input', saveSched);
+
+    // TIMER logic
+    const timeDisplay = document.getElementById('timeDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const breakBtn = document.getElementById('breakBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const setBtn = document.getElementById('setBtn');
+
+    let timerInterval = null;
+    const TIMER_KEY = 'dash_timer_v1';
+    // state: seconds remaining
+    const defaultSeconds = 25 * 60;
+    let state = {
+      seconds: defaultSeconds,
+      running: false
+    };
+    // load persisted seconds if any
+    try{
+      const raw = localStorage.getItem(TIMER_KEY);
+      if(raw){
+        const obj = JSON.parse(raw);
+        if(typeof obj.seconds === 'number') state.seconds = obj.seconds;
+        if(typeof obj.running === 'boolean') state.running = false; // never auto-run on load
+      }
+    }catch(e){}
+
+    function formatTime(s){
+      const mm = Math.floor(s/60);
+      const ss = s%60;
+      return String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+    }
+    function renderTime(){
+      timeDisplay.textContent = formatTime(state.seconds);
+    }
+    function saveTimer(){
+      localStorage.setItem(TIMER_KEY, JSON.stringify({seconds:state.seconds, running:false}));
+    }
+    function tick(){
+      if(state.seconds<=0){
+        clearInterval(timerInterval); timerInterval=null; state.running=false; saveTimer(); return;
+      }
+      state.seconds--;
+      renderTime();
+      saveTimer();
+    }
+
+    startBtn.addEventListener('click', ()=>{
+      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false; return; }
+      if(state.seconds<=0) state.seconds = defaultSeconds;
+      state.running=true;
+      renderTime();
+      timerInterval = setInterval(tick, 1000);
+    });
+    breakBtn.addEventListener('click', ()=>{
+      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
+      state.seconds = 5 * 60;
+      renderTime();
+      state.running=true;
+      timerInterval = setInterval(tick, 1000);
+      saveTimer();
+    });
+    resetBtn.addEventListener('click', ()=>{
+      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
+      state.seconds = defaultSeconds;
+      renderTime();
+      saveTimer();
+    });
+    setBtn.addEventListener('click', ()=>{
+      const inMin = prompt('分数を入力してください（例: 25）', '25');
+      if(inMin===null) return;
+      const n = parseInt(inMin,10);
+      if(Number.isNaN(n) || n<0){ alert('有効な数値を入力してください'); return; }
+      if(timerInterval){ clearInterval(timerInterval); timerInterval=null; state.running=false;}
+      state.seconds = n*60;
+      renderTime();
+      saveTimer();
+    });
+
+    renderTime();
+
+    // Save current state before unload
+    window.addEventListener('beforeunload', ()=>{
+      saveGoals();
+      saveSched();
+      saveTimer();
+    });
+
+    // small enhancement: allow deleting empty schedule items on blur if both empty
+    scheduleList.addEventListener('focusout', (e)=>{
+      setTimeout(()=>{
+        Array.from(scheduleList.querySelectorAll('.sched-item')).forEach(div=>{
+          const t = div.querySelector('.sched-time').value.trim();
+          const tx = div.querySelector('.sched-text').value.trim();
+          if(!t && !tx) div.remove();
+        });
+        saveSched();
+      }, 200);
+    });
+  </script>
+</body>
+</html>
