@@ -1,642 +1,321 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>集中作業環境サイト</title>
-  <style>
-    :root {
-      --bg: #fcfbf7;
-      --paper: #fffefb;
-      --ink: #5a4636;
-      --line: #d9d1c5;
-      --wood: #d8b48a;
-      --wood-dark: #b7865a;
-      --gold-1: #f7d775;
-      --gold-2: #d8a62a;
-      --gold-3: #fff1b4;
-      --tomato: #e14a36;
-      --tomato-dark: #bc2f22;
-      --green: #7ca44d;
-      --blue: #6b8ec6;
-      --cream: #f7f1de;
-      --shadow: 0 10px 24px rgba(90, 70, 54, 0.12);
-      --radius: 22px;
-    }
+<meta charset="UTF-8">
+<title>集中作業環境プロトタイプ - Muscat Edition</title>
+<style>
+  /* --- Base & Background Decorations --- */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    background-color: #fdfdfd;
+    background-image: 
+      radial-gradient(#e0e0e0 1px, transparent 1px),
+      url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d1d1d1' fill-opacity='0.2'%3E%3Cpath d='M10 10l5 5m-5 0l5-5M80 20c0 5-5 5-5 10s5 5 5 10M20 80h10v10H20zM50 50l2-2 2 2-2 2-2-2z' stroke='%23d1d1d1' stroke-width='0.5' fill='none'/%3E%3Ccircle cx='90' cy='90' r='2'/%3E%3Cpath d='M40 10c2 0 3 2 3 4s-1 4-3 4-3-2-3-4 1-4 3-4z'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 40px 40px, 200px 200px;
+    font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+    color: #444;
+    height: 100vh;
+    padding: 20px 50px;
+    min-width: 1200px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
 
-    * {
-      box-sizing: border-box;
-    }
+  /* --- Layout Structure --- */
+  .top-row {
+    display: flex;
+    gap: 30px;
+    height: 60%;
+  }
 
-    body {
-      margin: 0;
-      min-width: 1280px;
-      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      color: var(--ink);
-      background:
-        radial-gradient(circle at 12% 10%, rgba(255, 202, 121, 0.22) 0 6px, transparent 7px),
-        radial-gradient(circle at 85% 14%, rgba(130, 174, 255, 0.18) 0 5px, transparent 6px),
-        radial-gradient(circle at 18% 82%, rgba(255, 144, 105, 0.18) 0 5px, transparent 6px),
-        radial-gradient(circle at 90% 78%, rgba(144, 197, 110, 0.2) 0 6px, transparent 7px),
-        linear-gradient(180deg, #fffdf8 0%, var(--bg) 100%);
-      overflow: hidden;
-    }
+  .bottom-row {
+    display: flex;
+    gap: 30px;
+    height: 35%;
+    align-items: flex-end;
+    padding: 0 40px 20px 40px; /* 左右に余白 */
+  }
 
-    .desk {
-      width: 100vw;
-      height: 100vh;
-      padding: 28px;
-      position: relative;
-    }
+  .card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    position: relative;
+    transition: transform 0.2s;
+  }
 
-    .doodle {
-      position: absolute;
-      pointer-events: none;
-      opacity: 0.7;
-      font-size: 22px;
-      user-select: none;
-    }
+  /* --- ① ノート (左上・縦長) --- */
+  .note-space {
+    flex: 0 0 350px; /* 幅固定、縦長 */
+    background-color: #fffef0; /* クリーム色 */
+    border: 1px solid #e0d8c0;
+    display: flex;
+    flex-direction: column;
+    padding: 40px 20px 20px 60px; /* 左側に余白 */
+    overflow: hidden;
+  }
 
-    .d1 { top: 20px; left: 40px; }
-    .d2 { top: 24px; right: 54px; }
-    .d3 { bottom: 24px; left: 36px; }
-    .d4 { bottom: 22px; right: 44px; }
-    .d5 { top: 120px; right: 18px; }
-    .d6 { top: 160px; left: 16px; }
+  /* ノートの赤い縦線 */
+  .note-space::before {
+    content: "";
+    position: absolute;
+    left: 45px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #ffb3b3;
+  }
 
-    .layout {
-      width: 100%;
-      height: 100%;
-      display: grid;
-      grid-template-columns: 1.15fr 0.95fr;
-      grid-template-rows: 1fr 260px;
-      gap: 22px;
-      grid-template-areas:
-        "note rightstack"
-        "plan plan";
-    }
+  .note-space h2 {
+    font-size: 18px;
+    color: #a0a0a0;
+    margin-bottom: 10px;
+    font-family: serif;
+  }
 
-    .card {
-      background: var(--paper);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
-    }
+  .note-space textarea {
+    flex-grow: 1;
+    width: 100%;
+    border: none;
+    background: repeating-linear-gradient(transparent, transparent 31px, #d1e5f0 31px, #d1e5f0 32px);
+    line-height: 32px;
+    font-size: 16px;
+    outline: none;
+    resize: none;
+    color: #333;
+    padding-top: 4px;
+  }
 
-    .drag-hint {
-      position: absolute;
-      top: 12px;
-      right: 14px;
-      font-size: 12px;
-      color: #8d7f72;
-      background: rgba(255,255,255,0.8);
-      border: 1px dashed #d9cfc4;
-      padding: 4px 8px;
-      border-radius: 999px;
-      letter-spacing: 0.04em;
-    }
+  /* --- ② 教材スペース (右上・横長・額縁) --- */
+  .study-space {
+    flex: 1;
+    /* 豪華な金色の額縁 */
+    border: 18px solid;
+    border-image: linear-gradient(45deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c) 1;
+    box-shadow: 
+      0 15px 35px rgba(0,0,0,0.2),
+      inset 0 0 10px rgba(0,0,0,0.5);
+    background: #333;
+    overflow: hidden;
+  }
 
-    .note-card {
-      grid-area: note;
-      border: 3px solid #caa37b;
-      background:
-        linear-gradient(90deg, #eee6db 0 34px, transparent 34px),
-        repeating-linear-gradient(
-          to bottom,
-          transparent 0 38px,
-          rgba(122, 154, 206, 0.35) 38px 40px
-        ),
-        linear-gradient(180deg, #fffefc 0%, #fffaf2 100%);
-      padding: 28px 28px 28px 62px;
-    }
+  .study-space iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #fff;
+  }
 
-    .spiral {
-      position: absolute;
-      top: 22px;
-      left: 14px;
-      width: 22px;
-      height: calc(100% - 44px);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+  /* --- ④ 作業計画 (左下・広め) --- */
+  .plan-space {
+    flex: 2; /* タイマーより広く設定 */
+    height: 100%;
+    padding: 20px;
+    border: 1px solid #eee;
+  }
 
-    .spiral span {
-      width: 18px;
-      height: 18px;
-      border: 3px solid #9e8f7c;
-      border-right-color: transparent;
-      border-radius: 50%;
-      background: transparent;
-    }
+  .plan-space h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-    .note-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+  .plan-columns {
+    display: flex;
+    gap: 15px;
+    height: calc(100% - 40px);
+  }
 
-    .note-title {
-      font-size: 34px;
-      font-weight: 800;
-      color: #6a5543;
-      letter-spacing: 0.03em;
-    }
+  .plan-col {
+    flex: 1;
+    background: #fdfdfd;
+    border-radius: 10px;
+    padding: 12px;
+    border: 1px solid #f0f0f0;
+  }
 
-    .pencil {
-      width: 120px;
-      height: 14px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #f1ca63 0 18%, #6ea74e 18% 78%, #c98d4e 78% 92%, #f7e8cf 92% 100%);
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,0.12);
-    }
+  .plan-col h3 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #888;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
 
-    .note-textarea {
-      width: 100%;
-      height: calc(100% - 84px);
-      border: none;
-      outline: none;
-      resize: none;
-      background: transparent;
-      color: #5b4d3f;
-      font-size: 18px;
-      line-height: 40px;
-      font-family: "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
-      padding: 2px 4px 8px 0;
-    }
+  .plan-col ul {
+    list-style: none;
+    font-size: 14px;
+    line-height: 1.8;
+  }
 
-    .right-stack {
-      grid-area: rightstack;
-      display: grid;
-      grid-template-rows: 1fr 250px;
-      gap: 22px;
-      min-height: 0;
-    }
+  /* --- ③ ポモドーロタイマー (右下・マスカット) --- */
+  .timer-space {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .frame-card {
-      padding: 20px;
-      background: linear-gradient(180deg, #fef9eb 0%, #f8e6af 100%);
-      border: 6px solid var(--gold-2);
-      box-shadow:
-        0 10px 24px rgba(90, 70, 54, 0.14),
-        inset 0 0 0 3px #fbe8a6,
-        inset 0 0 0 8px #d39a1e,
-        inset 0 0 0 12px #f6d36d;
-    }
+  .muscat-container {
+    position: relative;
+    width: 220px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    .frame-ornament {
-      position: absolute;
-      width: 28px;
-      height: 28px;
-      border: 4px solid rgba(159, 110, 15, 0.8);
-      border-radius: 50% 20% 50% 20%;
-      background: rgba(255, 230, 155, 0.8);
-      z-index: 2;
-    }
+  /* マスカットの粒々デザイン */
+  .muscat-bunch {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
 
-    .fo-tl { top: 8px; left: 8px; }
-    .fo-tr { top: 8px; right: 8px; transform: scaleX(-1); }
-    .fo-bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
-    .fo-br { bottom: 8px; right: 8px; transform: scale(-1); }
+  .grape {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #d9f2a7, #85bb25);
+    box-shadow: inset -2px -2px 6px rgba(0,0,0,0.1), 2px 4px 8px rgba(0,0,0,0.1);
+    width: 60px;
+    height: 65px;
+  }
 
-    .frame-inner {
-      width: 100%;
-      height: 100%;
-      border-radius: 14px;
-      border: 4px solid #b07f18;
-      background: linear-gradient(180deg, #fff8df 0%, #fffdf5 100%);
-      padding: 14px;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 10px;
-      position: relative;
-      z-index: 1;
-    }
+  /* 粒の配置 */
+  .g1 { top: 10%; left: 35%; }
+  .g2 { top: 25%; left: 15%; }
+  .g3 { top: 25%; left: 55%; }
+  .g4 { top: 50%; left: 25%; }
+  .g5 { top: 50%; left: 50%; }
+  .g6 { top: 70%; left: 38%; width: 55px; height: 60px; }
 
-    .frame-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #8b6516;
-      letter-spacing: 0.04em;
-      padding-left: 4px;
-    }
+  /* 茎 */
+  .stem {
+    position: absolute;
+    top: -10px;
+    left: 48%;
+    width: 8px;
+    height: 30px;
+    background: #6d8c32;
+    border-radius: 4px;
+    transform: rotate(-10deg);
+    z-index: -1;
+  }
 
-    .iframe-shell {
-      border-radius: 10px;
-      overflow: hidden;
-      border: 3px solid #c7b38a;
-      background: #ffffff;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
-    }
+  .time-display {
+    position: relative;
+    z-index: 10;
+    font-size: 42px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    pointer-events: none;
+    font-family: 'Courier New', Courier, monospace;
+  }
 
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #fff;
-    }
+  .timer-controls {
+    position: absolute;
+    bottom: -40px;
+    display: flex;
+    gap: 10px;
+  }
 
-    .timer-card {
-      background:
-        linear-gradient(180deg, #fffaf0 0%, #fff4de 100%);
-      padding: 22px 24px 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 22px;
-      border: 3px solid #efd9b7;
-    }
+  .btn {
+    padding: 5px 15px;
+    border: none;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #fff;
+    color: #6d8c32;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #d9f2a7;
+  }
 
-    .tomato-wrap {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 28px;
-    }
-
-    .tomato {
-      width: 210px;
-      height: 170px;
-      position: relative;
-      background: radial-gradient(circle at 35% 30%, #ff8c72 0%, var(--tomato) 36%, var(--tomato-dark) 100%);
-      border-radius: 52% 52% 48% 48% / 58% 58% 42% 42%;
-      border: 4px solid #b63328;
-      box-shadow: inset 0 -10px 0 rgba(0,0,0,0.08);
-      flex-shrink: 0;
-    }
-
-    .tomato::before,
-    .tomato::after {
-      content: "";
-      position: absolute;
-      top: 20px;
-      bottom: 18px;
-      width: 2px;
-      background: rgba(120, 18, 12, 0.4);
-    }
-
-    .tomato::before { left: 50%; transform: translateX(-50%); }
-    .tomato::after { left: 32%; box-shadow: 72px 0 0 rgba(120, 18, 12, 0.4); }
-
-    .leaf {
-      position: absolute;
-      top: -14px;
-      left: 50%;
-      width: 74px;
-      height: 40px;
-      transform: translateX(-50%);
-    }
-
-    .leaf span {
-      position: absolute;
-      width: 28px;
-      height: 22px;
-      background: linear-gradient(180deg, #6cad48 0%, #42792b 100%);
-      border-radius: 0 100% 0 100%;
-      border: 2px solid #3a6b25;
-      transform-origin: bottom center;
-    }
-
-    .leaf span:nth-child(1) { left: 2px; top: 10px; transform: rotate(-42deg); }
-    .leaf span:nth-child(2) { left: 22px; top: 0; transform: rotate(-8deg); }
-    .leaf span:nth-child(3) { left: 42px; top: 10px; transform: rotate(34deg) scaleX(-1); }
-
-    .timer-display {
-      position: absolute;
-      left: 50%;
-      top: 54%;
-      transform: translate(-50%, -50%);
-      min-width: 126px;
-      text-align: center;
-      padding: 10px 14px;
-      border-radius: 18px;
-      background: #8f261d;
-      color: #fff8ef;
-      font-weight: 800;
-      font-size: 42px;
-      letter-spacing: 0.04em;
-      border: 4px solid #c84837;
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.14);
-    }
-
-    .seed {
-      position: absolute;
-      width: 9px;
-      height: 13px;
-      background: #ffd17a;
-      border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
-      opacity: 0.9;
-    }
-
-    .s1 { left: 36px; top: 82px; transform: rotate(-25deg); }
-    .s2 { left: 52px; top: 102px; transform: rotate(-10deg); }
-    .s3 { left: 78px; top: 124px; transform: rotate(12deg); }
-    .s4 { right: 40px; top: 82px; transform: rotate(22deg); }
-    .s5 { right: 60px; top: 102px; transform: rotate(8deg); }
-    .s6 { right: 82px; top: 124px; transform: rotate(-14deg); }
-
-    .timer-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-width: 140px;
-    }
-
-    .timer-title {
-      font-size: 20px;
-      font-weight: 800;
-      color: #7a5036;
-      text-align: center;
-      margin-bottom: 4px;
-    }
-
-    .btn-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .timer-btn {
-      border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      min-width: 82px;
-      color: white;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: default;
-      box-shadow: inset 0 -3px 0 rgba(0,0,0,0.12);
-    }
-
-    .start { background: #6c9f45; }
-    .break { background: #6d8ec9; }
-    .reset { background: #d56b4d; }
-
-    .plan-card {
-      grid-area: plan;
-      background:
-        linear-gradient(180deg, #fff8e8 0%, #fffaf0 100%);
-      border: 3px solid #dec7a4;
-      padding: 22px 24px 20px;
-    }
-
-    .plan-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .plan-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 32px;
-      font-weight: 900;
-      color: #6e503d;
-    }
-
-    .pin {
-      width: 18px;
-      height: 38px;
-      background: #e88c72;
-      border-radius: 6px;
-      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.12);
-      margin-right: 8px;
-    }
-
-    .plan-line {
-      flex: 1;
-      height: 5px;
-      margin-left: 18px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #f0c75a 0%, #e5b33c 100%);
-      opacity: 0.9;
-    }
-
-    .plan-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.1fr;
-      gap: 18px;
-      height: calc(100% - 64px);
-    }
-
-    .plan-section {
-      background: rgba(255, 255, 255, 0.82);
-      border: 2px solid #e5d6bf;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.6);
-      display: flex;
-      flex-direction: column;
-    }
-
-    .plan-section h3 {
-      margin: 0;
-      padding: 12px 16px;
-      font-size: 20px;
-      color: #fff;
-      letter-spacing: 0.03em;
-    }
-
-    .goals h3 { background: #d8c06a; color: #5c4a19; }
-    .todo h3 { background: #7fa1cf; }
-    .schedule h3 { background: #96b54a; }
-
-    .plan-content {
-      padding: 14px 16px;
-      font-size: 17px;
-      line-height: 1.8;
-      flex: 1;
-    }
-
-    .check-list,
-    .schedule-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
-    .check-list li,
-    .schedule-list li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 4px 0;
-    }
-
-    .box {
-      width: 18px;
-      height: 18px;
-      border: 2px solid #b19368;
-      border-radius: 4px;
-      background: #fffdf8;
-      flex-shrink: 0;
-    }
-
-    .time {
-      width: 64px;
-      font-weight: 700;
-      color: #6c5845;
-      flex-shrink: 0;
-    }
-
-    .schedule-text {
-      flex: 1;
-    }
-
-    .mini-deco {
-      position: absolute;
-      bottom: 14px;
-      left: 18px;
-      font-size: 28px;
-      opacity: 0.9;
-      pointer-events: none;
-    }
-
-    .mini-pencil {
-      position: absolute;
-      bottom: 16px;
-      right: 18px;
-      width: 94px;
-      height: 10px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, #6eaa49 0 24%, #f1cd6a 24% 76%, #d9705b 76% 92%, #f8e8cc 92% 100%);
-      transform: rotate(-18deg);
-      opacity: 0.9;
-    }
-  </style>
+</style>
 </head>
 <body>
-  <div class="desk">
-    <div class="doodle d1">📚 ✦</div>
-    <div class="doodle d2">✏️ 📖</div>
-    <div class="doodle d3">🍎 ✦</div>
-    <div class="doodle d4">✦ 🌿</div>
-    <div class="doodle d5">☆</div>
-    <div class="doodle d6">✦</div>
 
-    <main class="layout">
-      <section class="card note-card">
-        <div class="spiral">
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span>
+  <!-- 背景装飾用の落書き (SVGイメージの代替として配置可能) -->
+
+  <div class="top-row">
+    <!-- ① ノートスペース -->
+    <div class="card note-space">
+      <h2>Notes</h2>
+      <textarea placeholder="集中してメモを取りましょう..."></textarea>
+    </div>
+
+    <!-- ② 教材スペース -->
+    <div class="card study-space">
+      <iframe src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <!-- ④ 作業計画スペース -->
+    <div class="card plan-space">
+      <h2>Today's Tasks</h2>
+      <div class="plan-columns">
+        <div class="plan-col">
+          <h3>Goals</h3>
+          <ul>
+            <li>・メインタスクの完了</li>
+            <li>・重要項目の整理</li>
+          </ul>
         </div>
-        <div class="drag-hint">drag</div>
-        <div class="note-header">
-          <div class="note-title">Notes</div>
-          <div class="pencil"></div>
+        <div class="plan-col">
+          <h3>To-Do</h3>
+          <ul>
+            <li>□ 資料の読み込み</li>
+            <li>□ 構成案の作成</li>
+          </ul>
         </div>
-        <textarea class="note-textarea" placeholder="ここにメモを書きます..."></textarea>
-      </section>
-
-      <div class="right-stack">
-        <section class="card frame-card">
-          <span class="frame-ornament fo-tl"></span>
-          <span class="frame-ornament fo-tr"></span>
-          <span class="frame-ornament fo-bl"></span>
-          <span class="frame-ornament fo-br"></span>
-          <div class="drag-hint">drag</div>
-          <div class="frame-inner">
-            <div class="frame-title">教材スペース</div>
-            <div class="iframe-shell">
-              <iframe src="about:blank" title="教材表示エリア"></iframe>
-            </div>
-          </div>
-        </section>
-
-        <section class="card timer-card">
-          <div class="drag-hint">drag</div>
-          <div class="tomato-wrap">
-            <div class="tomato">
-              <div class="leaf">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div class="timer-display">25:00</div>
-              <span class="seed s1"></span>
-              <span class="seed s2"></span>
-              <span class="seed s3"></span>
-              <span class="seed s4"></span>
-              <span class="seed s5"></span>
-              <span class="seed s6"></span>
-            </div>
-
-            <div class="timer-controls">
-              <div class="timer-title">Pomodoro Timer</div>
-              <div class="btn-row">
-                <button class="timer-btn start">Start</button>
-                <button class="timer-btn reset">Reset</button>
-              </div>
-              <div class="btn-row">
-                <button class="timer-btn break">Break</button>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div class="plan-col">
+          <h3>Time</h3>
+          <ul>
+            <li>09:00 Focus</li>
+            <li>12:00 Lunch</li>
+          </ul>
+        </div>
       </div>
+    </div>
 
-      <section class="card plan-card">
-        <div class="drag-hint">drag</div>
-        <div class="plan-top">
-          <div style="display:flex; align-items:center;">
-            <div class="pin"></div>
-            <div class="plan-title">Today's Tasks ✎</div>
-          </div>
-          <div class="plan-line"></div>
+    <!-- ③ マスカットタイマー -->
+    <div class="timer-space">
+      <div class="muscat-container">
+        <div class="stem"></div>
+        <div class="muscat-bunch">
+          <div class="grape g1"></div>
+          <div class="grape g2"></div>
+          <div class="grape g3"></div>
+          <div class="grape g4"></div>
+          <div class="grape g5"></div>
+          <div class="grape g6"></div>
         </div>
-
-        <div class="plan-grid">
-          <div class="plan-section goals">
-            <h3>Goals for Today</h3>
-            <div class="plan-content">
-              <ul class="check-list">
-                <li><span class="box"></span><span>英単語を50個復習する</span></li>
-                <li><span class="box"></span><span>数学の問題集を2章進める</span></li>
-                <li><span class="box"></span><span>授業ノートを整理する</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="plan-section todo">
-            <h3>To-Do List</h3>
-            <div class="plan-content">
-              <ul class="check-list">
-                <li><span class="box"></span><span>Quiz Review</span></li>
-                <li><span class="box"></span><span>Read Article</span></li>
-                <li><span class="box"></span><span>Flashcards</span></li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="plan-section schedule">
-            <h3>Schedule</h3>
-            <div class="plan-content">
-              <ul class="schedule-list">
-                <li><span class="time">10:00</span><span class="schedule-text">Study</span></li>
-                <li><span class="time">11:00</span><span class="schedule-text">Break</span></li>
-                <li><span class="time">11:30</span><span class="schedule-text">Review</span></li>
-                <li><span class="time">13:00</span><span class="schedule-text">Practice</span></li>
-              </ul>
-            </div>
-          </div>
+        <div class="time-display">25:00</div>
+        <div class="timer-controls">
+          <button class="btn">START</button>
+          <button class="btn">RESET</button>
         </div>
-
-        <div class="mini-deco">🍎</div>
-        <div class="mini-pencil"></div>
-      </section>
-    </main>
+      </div>
+    </div>
   </div>
 
   <script>
+    // JavaScript logic remains unchanged as per instruction.
   </script>
 </body>
 </html>
-```
-
